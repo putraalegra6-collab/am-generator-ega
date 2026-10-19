@@ -174,7 +174,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMP-MAIL.IO API - ANTI CORS)
+// TEMP MAIL (TEMPMAIL.ING API)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -184,12 +184,15 @@ async function handleGenEmail(){
   showEmailTerm('Membuat email sementara...','');
   
   try{
-    const res = await fetch('https://api.internal.temp-mail.io/api/v3/email/new', {
+    // API TempMail.ing dari kode lu
+    const res = await fetch('https://api.tempmail.ing/api/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Application-Name': 'web', 'Application-Version': '4.0.0' },
-      body: JSON.stringify({ min_name_length: 10, max_name_length: 10 })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ duration: 10 })
     });
     const data = await res.json();
+    
+    if(!data.email) throw new Error("Gagal dapet email dari server.");
     
     currentEmail = data.email;
     document.getElementById('emailOutput').value = currentEmail;
@@ -207,12 +210,11 @@ async function handleGenEmail(){
   }finally{ setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false); }
 }
 
-// FIX TOMBOL COPY EMAIL
 function copyEmail(){
   const v=document.getElementById('emailOutput')?.value;
   if(!v) return;
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(v).then(()=>toast('✅ Email berhasil di-copy!')).catch(()=>fallbackCopy(v));
+    navigator.clipboard.writeText(v).then(()=>toast('✅ Email di-copy!')).catch(()=>fallbackCopy(v));
   } else {
     fallbackCopy(v);
   }
@@ -235,27 +237,25 @@ async function handleCheckInbox(){
   document.getElementById('alightBox').style.display='none';
   
   try{
-    const res = await fetch(`https://api.internal.temp-mail.io/api/v3/email/${currentEmail}/messages`, {
-      headers: { 'Application-Name': 'web', 'Application-Version': '4.0.0' }
-    });
-    const messages = await res.json();
+    // API TempMail.ing
+    const encodedEmail = encodeURIComponent(currentEmail);
+    const res = await fetch(`https://api.tempmail.ing/api/emails/${encodedEmail}`);
+    const data = await res.json();
     
-    if(messages && messages.length > 0){
-      toast(`Ada ${messages.length} pesan!`);
+    if(data && data.emails && data.emails.length > 0){
+      toast(`Ada ${data.emails.length} pesan!`);
       
-      const formattedMails = messages.map(m => {
-        // Ambil link dari body text
-        const links = extractLinksFromText(m.body_text);
+      const formattedMails = data.emails.map(m => {
+        const links = extractLinksFromText(m.body_text || m.text);
         return {
           subj: m.subject,
           from: m.from,
           time: new Date(m.created_at).toLocaleTimeString(),
-          bodyText: m.body_text,
           links: links 
         };
       });
       
-      const formattedData = { result: { success: true, numMess: messages.length, mails: formattedMails } };
+      const formattedData = { result: { success: true, numMess: data.emails.length, mails: formattedMails } };
       showEmailTerm(JSON.stringify(formattedData, null, 2),'success');
       updateAlightBox(formattedData);
     }else{
