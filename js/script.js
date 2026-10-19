@@ -1,14 +1,55 @@
 const API_BASE = '/api';
 const MAIL_API = '/akunlama';
-const ACCESS_KEY = 'Egaa'; 
-const isReturn = document.documentElement.getAttribute('data-return')==='1';
+const ACCESS_KEY = 'Egaa';
+const isReturn = document.documentElement.getAttribute('data-return') === '1';
+
+// ==========================================
+// STYLE TAMBAHAN (disuntik dari JS)
+// ==========================================
+function injectUI(){
+  if(document.getElementById('am-ui')) return;
+  const s = document.createElement('style');
+  s.id = 'am-ui';
+  s.textContent = `
+    .mail-list{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+    .mail-item{border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025);overflow:hidden;}
+    .mail-head{padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;}
+    .mail-from{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted,#8a8a8a);}
+    .mail-subject{font-size:.92rem;font-weight:600;color:var(--fg,#fff);line-height:1.4;word-break:break-word;}
+    .mail-meta{font-size:.68rem;color:var(--muted,#8a8a8a);}
+    .mail-body{border-top:1px solid rgba(255,255,255,.06);padding:14px 16px 16px;}
+    .mail-label{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted,#8a8a8a);margin-bottom:10px;}
+    .mail-link{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;color:var(--accent-2,#a7f3d0);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .mail-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+    .ib-btn{padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--fg,#fff);font-size:.72rem;font-weight:600;letter-spacing:.03em;cursor:pointer;}
+    .ib-btn:active{opacity:.7;}
+    .ib-btn.primary{background:var(--fg,#fff);color:#000;border-color:transparent;}
+    .mail-empty{padding:18px 16px;border:1px dashed rgba(255,255,255,.12);border-radius:12px;font-size:.76rem;color:var(--muted,#8a8a8a);text-align:center;line-height:1.5;}
+    .mail-debug{font-family:ui-monospace,monospace;font-size:.6rem;color:var(--muted,#8a8a8a);word-break:break-all;margin:0 0 10px;}
+    .mail-retry{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--fg,#fff);font-size:.72rem;font-weight:600;cursor:pointer;}
+
+    #premiumModal .pm-card{width:min(92vw,380px);margin:auto;padding:28px 24px 22px;border-radius:16px;background:#0e0e0e;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.5);color:#fff;}
+    .pm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+    .pm-tag{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:#a7f3d0;border:1px solid rgba(167,243,208,.3);padding:5px 9px;border-radius:999px;}
+    .pm-close{background:transparent;border:none;color:var(--muted,#8a8a8a);font-size:.72rem;cursor:pointer;letter-spacing:.04em;}
+    .pm-title{margin:0 0 6px;font-size:1.35rem;font-weight:700;letter-spacing:-.01em;}
+    .pm-sub{margin:0 0 22px;font-size:.8rem;color:var(--muted,#8a8a8a);line-height:1.5;}
+    .pm-list{margin:0;display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,.08);}
+    .pm-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+    .pm-row dt{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted,#8a8a8a);}
+    .pm-row dd{margin:0;font-size:.8rem;color:#fff;text-align:right;word-break:break-all;font-family:ui-monospace,monospace;}
+    .pm-done{width:100%;margin-top:22px;padding:13px;border-radius:10px;border:none;background:#fff;color:#000;font-size:.82rem;font-weight:700;letter-spacing:.04em;cursor:pointer;}
+  `;
+  document.head.appendChild(s);
+}
+injectUI();
 
 function go(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const target=document.getElementById('page-'+name);
   if(target) target.classList.add('active');
   document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===name));
-  
+
   hideTerm();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -91,10 +132,10 @@ function handleUnlock(){
   setTimeout(()=>{
     setLoading('btnUnlock','loaderUnlock','btnUnlockText',false);
     if(key===ACCESS_KEY){
-      unlocked=true;closeKeyModal();toast('Akses Diberikan!');
+      unlocked=true;closeKeyModal();toast('Akses diberikan');
       if(pendingAction==='verify')handleVerify();else handleSend();
     } else {
-      showTopError(true); toast('Key Salah! Join Channel dulu.');
+      showTopError(true); toast('Key salah. Join channel dulu.');
       document.getElementById('keyInput').value='';
     }
   },600);
@@ -115,17 +156,17 @@ const emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function handleSend(){
   const email=document.getElementById('emailInput').value.trim();
   if(!unlocked){openKeyModal('send');return;}
-  if(!email || !emailRegex.test(email)){toast('Email tidak valid!');return;}
-  
+  if(!email || !emailRegex.test(email)){toast('Email tidak valid');return;}
+
   hideTerm(); setLoading('btnSend','loaderSend','btnSendText',true); toast('Mengirim link...');
   try{
     const res=await fetch(`${API_BASE}/send-link`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
     const data=await res.json();
     if(!res.ok || data?.ok===false) throw new Error(data?.msg || data?.error || 'Gagal kirim');
-    toast('✅ Link terkirim!');
+    toast('Link terkirim');
     showTerm(JSON.stringify({"status":"success","msg":"Link terkirim ke "+email,"data":data},null,2),'success');
   }catch(e){
-    toast('❌ Gagal: ' + e.message);
+    toast('Gagal: ' + e.message);
     showTerm(JSON.stringify({"status":"error","msg":e.message},null,2),'error');
   }finally{ setLoading('btnSend','loaderSend','btnSendText',false); }
 }
@@ -134,321 +175,326 @@ async function handleVerify(){
   const email=document.getElementById('emailInput').value.trim();
   const link=document.getElementById('linkInput').value.trim();
   if(!unlocked){openKeyModal('verify');return;}
-  if(!email || !link){toast('Email & Link wajib diisi!');return;}
-  
+  if(!email || !link){toast('Email dan link wajib diisi');return;}
+
   hideTerm(); setLoading('btnVerify','loaderVerify','btnVerifyText',true); toast('Memvalidasi...');
   try{
     const res=await fetch(`${API_BASE}/verify-link`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, magicLink: link }) });
     const data=await res.json();
     if(!res.ok || data?.ok===false) throw new Error(data?.msg || data?.error || 'Gagal validasi');
-    toast('🎉 Aktivasi Berhasil!');
-    showTerm(JSON.stringify({"status":"success","msg":"Akun berhasil di aktivasi!"},null,2),'success');
+    toast('Aktivasi berhasil');
+    showTerm(JSON.stringify({"status":"success","msg":"Akun berhasil diaktivasi"},null,2),'success');
     showPremiumModal(data);
   }catch(e){
-    toast('❌ Gagal: ' + e.message);
+    toast('Gagal: ' + e.message);
     showTerm(JSON.stringify({"status":"error","msg":e.message},null,2),'error');
   }finally{ setLoading('btnVerify','loaderVerify','btnVerifyText',false); }
 }
 
-function showPremiumModal(data) {
-  const modal = document.getElementById('premiumModal');
-  const email = document.getElementById('emailInput')?.value || "-";
-  const uid = data?.data?.uid || data?.uid || "AM-" + Math.floor(Math.random() * 899999 + 100000);
-  const nextYear = new Date(); nextYear.setFullYear(nextYear.getFullYear() + 1);
-  const dateStr = nextYear.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+// MODAL BERHASIL PREMIUM (dirender ulang dari JS)
+function showPremiumModal(data){
+  const modal=document.getElementById('premiumModal');
+  if(!modal) return;
 
-  document.getElementById('pmEmail').textContent = email;
-  document.getElementById('pmUid').textContent = uid;
-  document.getElementById('pmPlan').textContent = "Premium"; 
-  document.getElementById('pmDate').textContent = dateStr;
-  
+  const email=document.getElementById('emailInput')?.value || '-';
+  const uid=data?.data?.uid || data?.uid || 'AM-' + Math.floor(Math.random()*899999 + 100000);
+  const nextYear=new Date(); nextYear.setFullYear(nextYear.getFullYear()+1);
+  const dateStr=nextYear.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+
+  modal.innerHTML = `
+    <div class="pm-card">
+      <div class="pm-top">
+        <span class="pm-tag">Premium</span>
+        <button type="button" class="pm-close" id="pmClose">Tutup</button>
+      </div>
+      <h2 class="pm-title">Aktivasi berhasil</h2>
+      <p class="pm-sub">Akun kamu sudah aktif. Simpan detail di bawah ini.</p>
+      <dl class="pm-list">
+        <div class="pm-row"><dt>Email</dt><dd id="pmEmail"></dd></div>
+        <div class="pm-row"><dt>UID</dt><dd id="pmUid"></dd></div>
+        <div class="pm-row"><dt>Paket</dt><dd id="pmPlan"></dd></div>
+        <div class="pm-row"><dt>Berlaku sampai</dt><dd id="pmDate"></dd></div>
+      </dl>
+      <button type="button" class="pm-done" id="pmDone">Selesai</button>
+    </div>`;
+
+  document.getElementById('pmEmail').textContent=email;
+  document.getElementById('pmUid').textContent=uid;
+  document.getElementById('pmPlan').textContent='Premium';
+  document.getElementById('pmDate').textContent=dateStr;
+
+  document.getElementById('pmClose').addEventListener('click', closePremiumModal);
+  document.getElementById('pmDone').addEventListener('click', closePremiumModal);
+
   modal.classList.add('show');
-  try { new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000.wav').play().catch(()=>{}); } catch(e){}
+  try{ new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000.wav').play().catch(()=>{}); }catch(e){}
 }
-function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
+function closePremiumModal(){ document.getElementById('premiumModal')?.classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (AKUNLAMA.COM API, lewat proxy /akunlama)
+// TEMP MAIL (AKUNLAMA.COM, lewat proxy /akunlama)
 // ==========================================
-let currentEmail = "";
-let autoInterval = null;
+let currentEmail="";
+let autoInterval=null;
 
 async function handleGenEmail(){
-  const user = document.getElementById('emailUser')?.value?.trim();
+  const user=document.getElementById('emailUser')?.value?.trim();
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
-  
+
   try{
-    let finalUser = user;
+    let finalUser=user;
     if(!finalUser){
-      finalUser = Math.random().toString(36).substring(2, 10);
+      finalUser=Math.random().toString(36).substring(2,10);
     }
-    
-    const res = await fetch(`${MAIL_API}/list?recipient=${finalUser}`);
-    if(!res.ok) throw new Error("Gagal konek ke server.");
-    
-    currentEmail = `${finalUser}@akunlama.com`;
-    document.getElementById('emailOutput').value = currentEmail;
-    document.getElementById('emailResult').style.display = 'block';
-    
-    toast(`Email dibuat!`);
+
+    const res=await fetch(`${MAIL_API}/list?recipient=${finalUser}`);
+    if(!res.ok) throw new Error('Gagal konek ke server');
+
+    currentEmail=`${finalUser}@akunlama.com`;
+    document.getElementById('emailOutput').value=currentEmail;
+    document.getElementById('emailResult').style.display='block';
+
+    toast('Email dibuat');
     const ei2=document.getElementById('emailInput');
     if(ei2) ei2.value=currentEmail;
-    
+
   }catch(e){
-    toast('Gagal buat email: ' + e.message);
+    toast('Gagal membuat email: ' + e.message);
   }finally{ setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false); }
 }
 
 function copyEmail(){
   const v=document.getElementById('emailOutput')?.value;
   if(!v) return;
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(v).then(()=>toast('✅ Email di-copy!')).catch(()=>fallbackCopy(v));
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(v).then(()=>toast('Email disalin')).catch(()=>fallbackCopy(v));
   } else { fallbackCopy(v); }
 }
-function fallbackCopy(text) {
-  const ta = document.createElement("textarea");
-  ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px';
   document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); toast('✅ Link berhasil di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
+  try{ document.execCommand('copy'); toast('Tersalin'); }catch(e){ toast('Gagal menyalin'); }
   document.body.removeChild(ta);
 }
 
-// FUNGSI BUKA LINK (Android: coba buka app Alight dulu, fallback ke browser)
-function openAlightApp(url) {
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  if (isAndroid) {
+// BUKA LINK (Android: coba buka app Alight dulu, fallback ke browser)
+function openAlightApp(url){
+  const isAndroid=/Android/i.test(navigator.userAgent);
+  if(isAndroid){
     toast('Membuka link...');
-    const cleanUrl = url.replace(/^https?:\/\//, '').replace(/#.*$/, '');
-    const fallback = encodeURIComponent(url);
-    window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.alightcreative.motion;S.browser_fallback_url=${fallback};end`;
+    const cleanUrl=url.replace(/^https?:\/\//,'').replace(/#.*$/,'');
+    const fallback=encodeURIComponent(url);
+    window.location.href=`intent://${cleanUrl}#Intent;scheme=https;package=com.alightcreative.motion;S.browser_fallback_url=${fallback};end`;
   } else {
-    window.open(url, '_blank', 'noopener');
+    window.open(url,'_blank','noopener');
   }
 }
 
 // CEK INBOX
-const linkStore = [];
+const linkStore=[];
 
 function escHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// Decode Quoted-Printable (=3D, =20, soft line break =\n)
 function decodeQP(s){
-  return s.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+  return s.replace(/=\r?\n/g,'').replace(/=([0-9A-Fa-f]{2})/g,(_,h)=>String.fromCharCode(parseInt(h,16)));
 }
 
-// Decode HTML entity (&lt;a href=&quot;...) jadi HTML asli, sampai tidak ada lagi
 function decodeEntities(s){
-  let out = s;
-  for(let i = 0; i < 3 && /&(lt|gt|quot|amp|#39|#x27);/i.test(out); i++){
-    const t = document.createElement('textarea');
-    t.innerHTML = out;
-    out = t.value;
+  let out=s;
+  for(let i=0;i<3 && /&(lt|gt|quot|amp|#39|#x27);/i.test(out);i++){
+    const t=document.createElement('textarea');
+    t.innerHTML=out;
+    out=t.value;
   }
   return out;
 }
 
-// Normalisasi escape JSON (\/ \u0026 \u003d) supaya link di dalam JSON tetap terbaca
 function decodeJsonEscapes(s){
   return s
-    .replace(/\\\//g, '/')
-    .replace(/\\u0026/gi, '&')
-    .replace(/\\u003d/gi, '=')
-    .replace(/\\u003c/gi, '<')
-    .replace(/\\u003e/gi, '>');
+    .replace(/\\\//g,'/')
+    .replace(/\\u0026/gi,'&')
+    .replace(/\\u003d/gi,'=')
+    .replace(/\\u003c/gi,'<')
+    .replace(/\\u003e/gi,'>');
 }
 
-// Bersihkan sisa karakter di ujung URL (mis. &quot; atau ")
 function cleanUrl(u){
   return u
     .split(/&quot;|&gt;|&lt;|&#39;|"|'|<|>/)[0]
-    .replace(/&amp;/gi, '&')
-    .replace(/[.,;)\]]+$/, '');
+    .replace(/&amp;/gi,'&')
+    .replace(/[.,;)\]]+$/,'');
 }
 
-// Ambil semua link verifikasi dari teks apa pun (HTML / QP / entity / JSON)
 function extractLinksFromHtml(raw){
   if(!raw) return [];
-  let src = typeof raw === 'string' ? raw : JSON.stringify(raw);
-  src = decodeJsonEscapes(src);
-  src = decodeEntities(src);
-  if(/=3D|=20|=\r?\n/i.test(src)) src = decodeQP(src);
-  src = decodeEntities(decodeJsonEscapes(src));
+  let src=typeof raw==='string' ? raw : JSON.stringify(raw);
+  src=decodeJsonEscapes(src);
+  src=decodeEntities(src);
+  if(/=3D|=20|=\r?\n/i.test(src)) src=decodeQP(src);
+  src=decodeEntities(decodeJsonEscapes(src));
 
-  const found = new Set();
+  const found=new Set();
 
   try{
-    const doc = new DOMParser().parseFromString(src, 'text/html');
-    doc.querySelectorAll('a[href]').forEach(a => {
-      const h = a.getAttribute('href');
+    const doc=new DOMParser().parseFromString(src,'text/html');
+    doc.querySelectorAll('a[href]').forEach(a=>{
+      const h=a.getAttribute('href');
       if(h && /^https?:\/\//i.test(h)) found.add(cleanUrl(h));
     });
   }catch(e){ console.log('DOMParser gagal', e); }
 
-  (src.match(/https?:\/\/[^\s"'<>\\]+/gi) || []).forEach(u => found.add(cleanUrl(u)));
+  (src.match(/https?:\/\/[^\s"'<>\\]+/gi) || []).forEach(u=>found.add(cleanUrl(u)));
 
-  const all = [...found].filter(u => u.length > 12 && !/\.(png|jpe?g|gif|css|svg|webp|ico)(\?|$)/i.test(u));
-
-  const verify = all.filter(u => /alight|firebaseapp|auth|verif|oobcode|mode=|magic|token|signin|confirm|activ/i.test(u));
-  return [...new Set(verify.length ? verify : all)].slice(0, 5);
+  const all=[...found].filter(u=>u.length>12 && !/\.(png|jpe?g|gif|css|svg|webp|ico)(\?|$)/i.test(u));
+  const verify=all.filter(u=>/alight|firebaseapp|auth|verif|oobcode|mode=|magic|token|signin|confirm|activ/i.test(u));
+  return [...new Set(verify.length ? verify : all)].slice(0,5);
 }
 
 async function handleCheckInbox(){
-  if(!currentEmail) { toast('Generate email dulu!'); return; }
+  if(!currentEmail){ toast('Buat email dulu'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
   try{
-    const username = currentEmail.split('@')[0];
-    const res = await fetch(`${MAIL_API}/list?recipient=${username}`);
-    const data = await res.json();
-    const messages = data.data || data.messages || (Array.isArray(data) ? data : []);
+    const username=currentEmail.split('@')[0];
+    const res=await fetch(`${MAIL_API}/list?recipient=${username}`);
+    const data=await res.json();
+    const messages=data.data || data.messages || (Array.isArray(data) ? data : []);
 
-    if(messages && messages.length > 0){
-      const fullEmails = [];
+    if(messages && messages.length>0){
+      const fullEmails=[];
       for(const msg of messages){
-        let html = typeof msg.message === 'string'
+        let html=typeof msg.message==='string'
           ? msg.message
           : (msg.message ? JSON.stringify(msg.message) : '');
-        let note = `preview ${html.length}`;
 
-        const st = msg.storage;
-        const key = (typeof st === 'string' ? st : (st && (st.key || st.id || st.storageKey))) || msg.storageKey || msg.key || msg.id || null;
+        const st=msg.storage;
+        const key=(typeof st==='string' ? st : (st && (st.key || st.id || st.storageKey))) || msg.storageKey || msg.key || msg.id || null;
 
-        // 1. Ambil isi email lengkap lewat getHtml (via proxy)
+        let note='';
+
         if(!extractLinksFromHtml(html).length && key){
           try{
-            const r = await fetch(`${MAIL_API}/getHtml?region=us&key=${encodeURIComponent(key)}`);
-            const t = await r.text();
-            if(t) html += '\n' + t;
-            note += ` | getHtml ${r.status} (${t.length})`;
-          }catch(e){ note += ` | getHtml gagal: ${e.message}`; }
+            const r=await fetch(`${MAIL_API}/getHtml?region=us&key=${encodeURIComponent(key)}`);
+            const t=await r.text();
+            if(t) html+='\n'+t;
+            note+=`getHtml ${r.status}`;
+          }catch(e){ note+=`getHtml gagal: ${e.message}`; }
         }
 
-        // 2. Cadangan: getKey (JSON)
         if(!extractLinksFromHtml(html).length && key){
           try{
-            const r = await fetch(`${MAIL_API}/getKey?region=us&key=${encodeURIComponent(key)}`);
-            const t = await r.text();
-            if(t) html += '\n' + t;
-            note += ` | getKey ${r.status} (${t.length})`;
-          }catch(e){ note += ` | getKey gagal: ${e.message}`; }
+            const r=await fetch(`${MAIL_API}/getKey?region=us&key=${encodeURIComponent(key)}`);
+            const t=await r.text();
+            if(t) html+='\n'+t;
+            note+=` | getKey ${r.status}`;
+          }catch(e){ note+=` | getKey gagal: ${e.message}`; }
         }
-
-        if(!key) note += ' | storage kosong';
 
         fullEmails.push({
-          subject: msg.subject || msg.title || 'Aktivasi Akun',
-          from: msg.from || 'Alight Creative',
-          date: msg.timestamp || msg.date || new Date().toISOString(),
+          subject: msg.message?.headers?.subject || msg.subject || msg.title || 'Tanpa subjek',
+          from: msg.message?.headers?.from || msg.from || 'Tidak diketahui',
+          date: msg.timestamp ? new Date(msg.timestamp*1000) : (msg.date || new Date()),
           html,
           text: msg.preview || '',
-          debug: note
+          debug: note || '-'
         });
       }
       renderInboxUI(fullEmails);
     }else{
-      document.getElementById('inboxList').innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:.8rem; border:1px dashed var(--line); border-radius:12px;">Belum ada pesan masuk. Tunggu 10-30 detik.</div>`;
-      document.getElementById('inboxContainer').style.display = 'block';
-      toast('Inbox kosong. Tunggu 10 detik.');
+      document.getElementById('inboxList').innerHTML=`<div class="mail-empty">Belum ada pesan masuk.<br>Tunggu 10 sampai 30 detik, lalu cek lagi.</div>`;
+      document.getElementById('inboxContainer').style.display='block';
+      toast('Inbox kosong');
     }
   }catch(e){
     toast('Gagal cek inbox: ' + e.message);
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
 }
 
-function renderInboxUI(emails) {
-  const list = document.getElementById('inboxList');
-  linkStore.length = 0;
-  list.innerHTML = '';
+function renderInboxUI(emails){
+  const list=document.getElementById('inboxList');
+  linkStore.length=0;
+  list.innerHTML='';
+  list.className='mail-list';
 
-  emails.forEach((m) => {
-    const links = extractLinksFromHtml(m.html);
-    if (links.length === 0 && m.text) links.push(...extractLinksFromHtml(m.text));
-    const timeStr = m.date ? new Date(m.date).toLocaleTimeString() : '-';
+  emails.forEach(m=>{
+    const links=extractLinksFromHtml(m.html);
+    if(links.length===0 && m.text) links.push(...extractLinksFromHtml(m.text));
+    const timeStr=m.date instanceof Date
+      ? m.date.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})
+      : (m.date ? new Date(m.date).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-');
 
-    let card = `
-    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
-      <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:flex-start; gap:10px;">
-        <div style="background:rgba(74,222,128,.1); padding:6px; border-radius:8px; color:var(--accent);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="font-weight:800; font-size:.85rem; color:var(--fg); line-height:1.3;">${escHtml(m.subject)}</div>
-          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Pengirim: ${escHtml(m.from)}</div>
-          <div style="font-size:.65rem; color:var(--muted);">Waktu: ${escHtml(timeStr)}</div>
-        </div>
+    let card=`
+    <div class="mail-item">
+      <div class="mail-head">
+        <div class="mail-from">${escHtml(m.from)}</div>
+        <div class="mail-subject">${escHtml(m.subject)}</div>
+        <div class="mail-meta">${escHtml(timeStr)}</div>
       </div>`;
 
-    if(links.length > 0){
-      card += `
-      <div style="padding:12px 16px; border-top:1px dashed var(--line);">
-        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-          <span style="color:var(--warn); font-size:.8rem;">⚡</span>
-          <span style="font-size:.65rem; font-weight:800; color:var(--muted); letter-spacing:.1em;">LINK VERIFIKASI:</span>
-        </div>`;
-      links.forEach(link => {
-        const idx = linkStore.push(link) - 1;
-        card += `
-        <div style="background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px;">
-          <div style="font-family:monospace; font-size:.65rem; color:var(--accent-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:8px;">${escHtml(link)}</div>
-          <div style="display:flex; gap:6px;">
-            <button data-act="copy" data-idx="${idx}" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">📋 Salin</button>
-            <button data-act="open" data-idx="${idx}" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
-            <button data-act="use" data-idx="${idx}" style="flex:1; padding:8px; border-radius:6px; border:none; background:var(--accent); color:#000; font-size:.7rem; font-weight:800; cursor:pointer;">⚡ Pakai</button>
-          </div>
-        </div>`;
+    if(links.length>0){
+      card+=`<div class="mail-body"><div class="mail-label">Link verifikasi</div>`;
+      links.forEach((link,i)=>{
+        const idx=linkStore.push(link)-1;
+        card+=`
+        <div class="mail-link">${escHtml(link)}</div>
+        <div class="mail-actions">
+          <button type="button" class="ib-btn" data-act="copy" data-idx="${idx}">Salin</button>
+          <button type="button" class="ib-btn" data-act="open" data-idx="${idx}">Buka</button>
+          <button type="button" class="ib-btn primary" data-act="use" data-idx="${idx}">Pakai</button>
+        </div>${i<links.length-1?'<div style="height:10px"></div>':''}`;
       });
-      card += `</div>`;
+      card+=`</div>`;
     } else {
-      card += `
-      <div style="padding:12px 16px; border-top:1px dashed var(--line);">
-        <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Link tidak ditemukan. Coba klik Cek Inbox lagi.</div>
-        <div style="font-size:.6rem; color:var(--accent-2); font-family:monospace; margin-bottom:8px; word-break:break-all;">DEBUG: ${escHtml(m.debug || '-')}</div>
-        <button data-act="refresh" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🔄 Refresh Cek Inbox</button>
+      card+=`
+      <div class="mail-body">
+        <p class="mail-debug">${escHtml(m.debug)}</p>
+        <div class="mail-label">Link verifikasi belum ditemukan</div>
+        <button type="button" class="mail-retry" data-act="refresh">Refresh inbox</button>
       </div>`;
     }
-    card += `</div>`;
-    list.innerHTML += card;
+    card+=`</div>`;
+    list.innerHTML+=card;
   });
 
-  document.getElementById('inboxContainer').style.display = 'block';
-  document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth', block:'nearest'});
+  document.getElementById('inboxContainer').style.display='block';
+  document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-// Event delegation: tombol di kartu inbox, aman dari masalah quote di URL
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('#inboxList button[data-act]');
+// Event delegation untuk tombol di inbox
+document.addEventListener('click',(e)=>{
+  const btn=e.target.closest('#inboxList button[data-act]');
   if(!btn) return;
-  const act = btn.dataset.act;
-  if(act === 'refresh'){ handleCheckInbox(); return; }
-  const link = linkStore[Number(btn.dataset.idx)];
+  const act=btn.dataset.act;
+  if(act==='refresh'){ handleCheckInbox(); return; }
+  const link=linkStore[Number(btn.dataset.idx)];
   if(!link) return;
-  if(act === 'copy') copyText(link);
-  if(act === 'open') openAlightApp(link);
-  if(act === 'use') validasiOtomatis(link, currentEmail);
+  if(act==='copy') copyText(link);
+  if(act==='open') openAlightApp(link);
+  if(act==='use') validasiOtomatis(link,currentEmail);
 });
 
 function copyText(text){
   if(navigator.clipboard && window.isSecureContext){
-    navigator.clipboard.writeText(text).then(()=>toast('✅ Link berhasil di-copy!')).catch(()=>fallbackCopy(text));
+    navigator.clipboard.writeText(text).then(()=>toast('Link disalin')).catch(()=>fallbackCopy(text));
   } else { fallbackCopy(text); }
 }
 
-window.validasiOtomatis = async function(link, email) {
-  document.getElementById('emailInput').value = email;
-  document.getElementById('linkInput').value = link;
+window.validasiOtomatis=async function(link,email){
+  document.getElementById('emailInput').value=email;
+  document.getElementById('linkInput').value=link;
   go('tool');
   switchTab('verify');
-  setTimeout(() => handleVerify(), 500); 
+  setTimeout(()=>handleVerify(),500);
 };
 
 window.startAutoCheck=function(){
   const st=document.getElementById('autoStatus');
-  if(autoInterval){ clearInterval(autoInterval); autoInterval=null; if(st) st.textContent='idle'; toast('Auto OFF'); return; }
-  if(!currentEmail){ toast('Generate email dulu'); return; }
-  if(st) st.textContent='auto ON (5s)';
-  toast('Auto ON');
-  autoInterval=setInterval(handleCheckInbox, 5000);
+  if(autoInterval){ clearInterval(autoInterval); autoInterval=null; if(st) st.textContent='idle'; toast('Auto refresh mati'); return; }
+  if(!currentEmail){ toast('Buat email dulu'); return; }
+  if(st) st.textContent='auto aktif (5 detik)';
+  toast('Auto refresh aktif');
+  autoInterval=setInterval(handleCheckInbox,5000);
   handleCheckInbox();
 };
