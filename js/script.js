@@ -167,10 +167,9 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (MAIL.TM API) - FULL FIX
+// TEMP MAIL (AKUNLAMA.COM API) - FIX FULL
 // ==========================================
 let currentEmail = "";
-let mailTmToken = ""; 
 let autoInterval = null;
 
 async function handleGenEmail(){
@@ -178,34 +177,17 @@ async function handleGenEmail(){
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   
   try{
-    const domRes = await fetch('https://api.mail.tm/domains');
-    const domData = await domRes.json();
-    const domain = domData['hydra:member'][0].domain;
-
+    // Generate random username kalo kosong
     let finalUser = user;
     if(!finalUser){
       finalUser = Math.random().toString(36).substring(2, 10);
     }
-    const emailStr = `${finalUser}@${domain}`;
-    const password = "Password123!";
-
-    const accRes = await fetch('https://api.mail.tm/accounts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: emailStr, password: password })
-    });
     
-    if(!accRes.ok) throw new Error("Nama email sudah dipakai, coba nama lain.");
+    // API akunlama gak butuh register, langsung cek inbox aja
+    const res = await fetch(`https://akunlama.com/api/list?recipient=${finalUser}`);
+    if(!res.ok) throw new Error("Gagal konek ke server.");
     
-    const loginRes = await fetch('https://api.mail.tm/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: emailStr, password: password })
-    });
-    const loginData = await loginRes.json();
-    mailTmToken = loginData.token;
-    
-    currentEmail = emailStr;
+    currentEmail = `${finalUser}@akunlama.com`;
     document.getElementById('emailOutput').value = currentEmail;
     document.getElementById('emailResult').style.display = 'block';
     
@@ -233,6 +215,7 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
 }
 
+// FUNGSI BUKA APP ALIGHT MOTION
 function openAlightApp(url) {
   const isAndroid = /Android/i.test(navigator.userAgent);
   if (isAndroid) {
@@ -246,37 +229,52 @@ function openAlightApp(url) {
   }
 }
 
+// CEK INBOX (AKUNLAMA) - FIX LINK HTML (PAKE DOMPARSER)
 async function handleCheckInbox(){
-  if(!currentEmail || !mailTmToken) { toast('Generate email dulu!'); return; }
+  if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
   
   document.getElementById('inboxContainer').style.display = 'none';
   
   try{
-    const res = await fetch(`https://api.mail.tm/messages`, {
-      headers: { 'Authorization': `Bearer ${mailTmToken}` }
-    });
+    const username = currentEmail.split('@')[0];
+    const res = await fetch(`https://akunlama.com/api/list?recipient=${username}`);
     const data = await res.json();
-    const messages = data['hydra:member'];
+    
+    // Akunlama balikin data dalam bentuk array atau object 'data'
+    let messages = data.data || data.messages || (Array.isArray(data) ? data : []);
 
     if(messages && messages.length > 0){
       toast(`Mendownload isi pesan...`);
       let fullEmails = [];
       
       for(let i=0; i < messages.length; i++){
-        let msgId = messages[i].id;
+        let msg = messages[i];
+        // Ambil storageKey buat narik HTML
+        let storageKey = msg.storageKey || msg.key || msg.id; 
         
-        const detailRes = await fetch(`https://api.mail.tm/messages/${msgId}`, {
-          headers: { 'Authorization': `Bearer ${mailTmToken}` }
-        });
-        const detail = await detailRes.json();
+        let htmlBody = "";
+        
+        if(storageKey){
+          try {
+            // Nembak ke getHtml buat dapet link asli
+            const detailRes = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${storageKey}`);
+            // Ambil text mentahnya
+            let rawHtml = await detailRes.text();
+            
+            // Gunakan DOMParser buat nge-decode HTML yang di-encode
+            let doc = new DOMParser().parseFromString(rawHtml, "text/html");
+            htmlBody = doc.documentElement.textContent || rawHtml;
+            
+          } catch(e) { console.log("Gagal tarik html", e); }
+        }
         
         fullEmails.push({
-          subject: detail.subject,
-          from: detail.from.address,
-          date: detail.createdAt,
-          html: Array.isArray(detail.html) ? detail.html.join("") : detail.html,
-          text: detail.text
+          subject: msg.subject || msg.subj || "Aktivasi Akun",
+          from: msg.from || "Alight Creative",
+          date: msg.date || msg.time || new Date().toISOString(),
+          html: htmlBody,
+          text: msg.bodyText || msg.body || msg.preview || ""
         });
       }
       
@@ -292,6 +290,7 @@ async function handleCheckInbox(){
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
 }
 
+// RENDER UI INBOX (PERSIS KAYAK LOVABLE)
 function renderInboxUI(emails) {
   const list = document.getElementById('inboxList');
   list.innerHTML = '';
@@ -352,6 +351,7 @@ function renderInboxUI(emails) {
   document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+// REGEX SUPER KUAT (NANGKEP HREF DI DALAM HTML)
 function extractLinksFromText(text) {
   if(!text) return [];
   const urlRegex = /(https?:\/\/[^\s"'<>\\]+)/gi;
