@@ -1,4 +1,5 @@
 const API_BASE = '/api';
+const MAIL_API = '/akunlama';
 const ACCESS_KEY = 'Egaa'; 
 const isReturn = document.documentElement.getAttribute('data-return')==='1';
 
@@ -167,7 +168,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (AKUNLAMA.COM API)
+// TEMP MAIL (AKUNLAMA.COM API, lewat proxy /akunlama)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -177,14 +178,12 @@ async function handleGenEmail(){
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   
   try{
-    // Generate random username kalo kosong
     let finalUser = user;
     if(!finalUser){
       finalUser = Math.random().toString(36).substring(2, 10);
     }
     
-    // API akunlama gak butuh register, langsung cek inbox aja
-    const res = await fetch(`https://akunlama.com/api/list?recipient=${finalUser}`);
+    const res = await fetch(`${MAIL_API}/list?recipient=${finalUser}`);
     if(!res.ok) throw new Error("Gagal konek ke server.");
     
     currentEmail = `${finalUser}@akunlama.com`;
@@ -228,7 +227,7 @@ function openAlightApp(url) {
   }
 }
 
-// CEK INBOX (AKUNLAMA)
+// CEK INBOX
 const linkStore = [];
 
 function escHtml(s){
@@ -301,7 +300,7 @@ async function handleCheckInbox(){
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
   try{
     const username = currentEmail.split('@')[0];
-    const res = await fetch(`https://akunlama.com/api/list?recipient=${username}`);
+    const res = await fetch(`${MAIL_API}/list?recipient=${username}`);
     const data = await res.json();
     const messages = data.data || data.messages || (Array.isArray(data) ? data : []);
 
@@ -311,29 +310,29 @@ async function handleCheckInbox(){
         let html = typeof msg.message === 'string'
           ? msg.message
           : (msg.message ? JSON.stringify(msg.message) : '');
-        let note = `message ${html.length}`;
+        let note = `preview ${html.length}`;
 
         const st = msg.storage;
         const key = (typeof st === 'string' ? st : (st && (st.key || st.id || st.storageKey))) || msg.storageKey || msg.key || msg.id || null;
 
-        // 1. Kalau message belum ada link, coba getHtml
+        // 1. Ambil isi email lengkap lewat getHtml (via proxy)
         if(!extractLinksFromHtml(html).length && key){
           try{
-            const r = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${encodeURIComponent(key)}`);
+            const r = await fetch(`${MAIL_API}/getHtml?region=us&key=${encodeURIComponent(key)}`);
             const t = await r.text();
             if(t) html += '\n' + t;
             note += ` | getHtml ${r.status} (${t.length})`;
-          }catch(e){ note += ' | getHtml gagal'; }
+          }catch(e){ note += ` | getHtml gagal: ${e.message}`; }
         }
 
-        // 2. Masih kosong? Coba getKey (JSON), sama seperti di scraper akunlama
+        // 2. Cadangan: getKey (JSON)
         if(!extractLinksFromHtml(html).length && key){
           try{
-            const r = await fetch(`https://akunlama.com/api/getKey?region=us&key=${encodeURIComponent(key)}`);
+            const r = await fetch(`${MAIL_API}/getKey?region=us&key=${encodeURIComponent(key)}`);
             const t = await r.text();
             if(t) html += '\n' + t;
             note += ` | getKey ${r.status} (${t.length})`;
-          }catch(e){ note += ' | getKey gagal'; }
+          }catch(e){ note += ` | getKey gagal: ${e.message}`; }
         }
 
         if(!key) note += ' | storage kosong';
