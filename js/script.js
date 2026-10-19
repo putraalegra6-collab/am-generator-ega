@@ -165,7 +165,7 @@ function showPremiumModal(data) {
 
   document.getElementById('pmEmail').textContent = email;
   document.getElementById('pmUid').textContent = uid;
-  document.getElementById('pmPlan').textContent = "Premium"; // GANTI JADI PREMIUM
+  document.getElementById('pmPlan').textContent = "Premium"; 
   document.getElementById('pmDate').textContent = dateStr;
   
   modal.classList.add('show');
@@ -174,35 +174,40 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMPMail.PLUS API)
+// TEMP MAIL (TEMP-MAIL.IO API - ANTI CORS)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
 
 async function handleGenEmail(){
-  const user = document.getElementById('emailUser')?.value?.trim();
-  const domain = document.getElementById('emailDomain')?.value || 'mailto.plus';
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   showEmailTerm('Membuat email sementara...','');
   
-  let finalUser = user;
-  if(!finalUser){
-    const chars = 'abcdefghijklmnopqrstuvwxyz1234567890';
-    finalUser = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  }
-  
-  currentEmail = `${finalUser}@${domain}`;
-  
-  setTimeout(() => {
+  try{
+    const res = await fetch('https://api.internal.temp-mail.io/api/v3/email/new', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Application-Name': 'web', 'Application-Version': '4.0.0' },
+      body: JSON.stringify({ min_name_length: 10, max_name_length: 10 })
+    });
+    const data = await res.json();
+    
+    currentEmail = data.email;
     document.getElementById('emailOutput').value = currentEmail;
     document.getElementById('emailResult').style.display = 'block';
-    showEmailTerm(JSON.stringify({status:"success", email: currentEmail, note:"Email berhasil dibuat. Klik Cek Inbox untuk memantau."}, null, 2),'success');
-    toast('Email berhasil dibuat!');
-    setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false);
-  }, 800); 
+    
+    toast(`Email dibuat!`);
+    showEmailTerm(JSON.stringify({status:"success", email: currentEmail, note:"Gunakan email ini di menu Tool."}, null, 2),'success');
+    
+    const ei2=document.getElementById('emailInput');
+    if(ei2) ei2.value=currentEmail;
+    
+  }catch(e){
+    toast('Gagal buat email: ' + e.message);
+    showEmailTerm(JSON.stringify({status:"error", msg:e.message},null,2),'error');
+  }finally{ setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false); }
 }
 
-// FIX TOMBOL COPY EMAIL (PASTI JALAN DI HP)
+// FIX TOMBOL COPY EMAIL
 function copyEmail(){
   const v=document.getElementById('emailOutput')?.value;
   if(!v) return;
@@ -230,26 +235,29 @@ async function handleCheckInbox(){
   document.getElementById('alightBox').style.display='none';
   
   try{
-    const res = await fetch(`https://tempmail.plus/api/mails?email=${currentEmail}&limit=20`);
-    const data = await res.json();
+    const res = await fetch(`https://api.internal.temp-mail.io/api/v3/email/${currentEmail}/messages`, {
+      headers: { 'Application-Name': 'web', 'Application-Version': '4.0.0' }
+    });
+    const messages = await res.json();
     
-    if(data.result === false) throw new Error("Inbox belum siap / tidak ditemukan.");
-    
-    const mails = data.mail_list || [];
-    
-    if(mails.length > 0){
-      toast(`Ada ${mails.length} pesan!`);
+    if(messages && messages.length > 0){
+      toast(`Ada ${messages.length} pesan!`);
       
-      const formattedMails = mails.map(m => ({
-        subj: m.subject,
-        from: m.from_mail,
-        time: new Date(m.time).toLocaleTimeString(),
-        mail_id: m.mail_id
-      }));
+      const formattedMails = messages.map(m => {
+        // Ambil link dari body text
+        const links = extractLinksFromText(m.body_text);
+        return {
+          subj: m.subject,
+          from: m.from,
+          time: new Date(m.created_at).toLocaleTimeString(),
+          bodyText: m.body_text,
+          links: links 
+        };
+      });
       
-      const formattedData = { result: { success: true, numMess: mails.length, mails: formattedMails } };
+      const formattedData = { result: { success: true, numMess: messages.length, mails: formattedMails } };
       showEmailTerm(JSON.stringify(formattedData, null, 2),'success');
-      updateAlightBox(formattedData, currentEmail);
+      updateAlightBox(formattedData);
     }else{
       toast('Inbox kosong.');
       showEmailTerm(JSON.stringify({status:"warning", msg:"Belum ada pesan masuk. Tunggu 10-30 detik."},null,2),'warning');
@@ -260,6 +268,12 @@ async function handleCheckInbox(){
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
 }
 
+function extractLinksFromText(text) {
+  if(!text) return [];
+  const urlRegex = /(https?:\/\/[^\s"'<>]+)/gi;
+  return text.match(urlRegex) || [];
+}
+
 function showEmailTerm(msg,type){
   const term=document.getElementById('emailTerm'), body=document.getElementById('emailTermBody');
   if(!term||!body) return;
@@ -268,20 +282,24 @@ function showEmailTerm(msg,type){
   term.classList.add('show'); body.scrollTop=0;
 }
 
-function updateAlightBox(j, emailAddress) {
+function updateAlightBox(j) {
   const box=document.getElementById('alightBox'); const list=document.getElementById('alightList');
   if(!box||!list) return;
   
   let mails = j?.result?.mails || [];
-  let linksData = mails.map((m) => ({ 
-    urlMail: `https://tempmail.plus/api/mails/${m.mail_id}?email=${emailAddress}&epin=`,
-    subj: m.subj, 
-    time: m.time 
-  }));
+  let linksData = [];
+  
+  mails.forEach(m => {
+    (m.links || []).forEach(l => linksData.push({ 
+      link: l, 
+      subj: m.subj, 
+      time: m.time 
+    }));
+  });
   
   if(!linksData.length) { box.style.display='none'; return; }
   
-  document.getElementById('alightCount').textContent = linksData.length + ' pesan';
+  document.getElementById('alightCount').textContent = linksData.length + ' link';
   window._viewData = linksData;
   
   renderInboxIdx(0); box.style.display='block';
@@ -296,22 +314,22 @@ function renderInboxIdx(idx) {
   
   list.innerHTML = `
   <div style="padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);">
-    <div style="font-size:.75rem;color:var(--accent);margin-bottom:6px;font-weight:700;">${item.subj || 'No Subject'}</div>
+    <div style="font-size:.75rem;color:var(--accent);margin-bottom:6px;font-weight:700;">${item.subj || 'Link Ditemukan'}</div>
     <div style="font-size:.65rem;color:var(--muted);margin-bottom:12px;">${item.time}</div>
     
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button onclick="copyLinkTxt('${item.urlMail}')" style="flex:1 1 100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">📋 Salin Link</button>
+      <button onclick="copyLinkTxt('${item.link}')" style="flex:1 1 100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">📋 Salin Link</button>
       
-      <button onclick="bukaDiChrome('${item.urlMail}')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--accent);background:rgba(255,255,255,.1);color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">🌐 Buka</button>
+      <button onclick="bukaDiChrome('${item.link}')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--accent);background:rgba(255,255,255,.1);color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">🌐 Buka</button>
       
-      <button onclick="validasiOtomatis('${item.urlMail}', '${currentEmail}')" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--accent);color:#050505;font-weight:800;font-size:.8rem;cursor:pointer;transition:0.3s;">⚡ Validasi</button>
+      <button onclick="validasiOtomatis('${item.link}', '${currentEmail}')" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--accent);color:#050505;font-weight:800;font-size:.8rem;cursor:pointer;transition:0.3s;">⚡ Validasi</button>
     </div>
   </div>`;
 }
 
 window.copyLinkTxt = function(url) {
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(url).then(()=>toast('✅ Link berhasil di-copy!')).catch(()=>fallbackCopy(url));
+    navigator.clipboard.writeText(url).then(()=>toast('✅ Link di-copy!')).catch(()=>fallbackCopy(url));
   } else {
     fallbackCopy(url);
   }
@@ -321,9 +339,9 @@ window.bukaDiChrome = function(url) {
   window.open(url, '_blank');
 };
 
-window.validasiOtomatis = async function(urlMail, email) {
+window.validasiOtomatis = async function(link, email) {
   document.getElementById('emailInput').value = email;
-  document.getElementById('linkInput').value = urlMail;
+  document.getElementById('linkInput').value = link;
   go('tool');
   switchTab('verify');
   setTimeout(() => handleVerify(), 500); 
