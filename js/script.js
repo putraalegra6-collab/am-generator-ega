@@ -174,14 +174,13 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMPMAIL.ING API) - FIX TOTAL
+// TEMP MAIL (TEMPMAIL.ING API)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
 
 async function handleGenEmail(){
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
-  showEmailTerm('Membuat email sementara...','');
   
   try{
     const res = await fetch('https://api.tempmail.ing/api/generate', {
@@ -191,7 +190,6 @@ async function handleGenEmail(){
     });
     const data = await res.json();
     
-    // API TempMail.ing ngasih balik object nested di dalam property 'email'
     let emailStr = "";
     if (typeof data.email === 'object' && data.email !== null) {
       emailStr = data.email.address;
@@ -199,21 +197,18 @@ async function handleGenEmail(){
       emailStr = data.email;
     }
 
-    if(!emailStr) throw new Error("Gagal mengambil address email dari server.");
+    if(!emailStr) throw new Error("Gagal dapet email.");
     
     currentEmail = emailStr;
     document.getElementById('emailOutput').value = currentEmail;
     document.getElementById('emailResult').style.display = 'block';
     
     toast(`Email dibuat!`);
-    showEmailTerm(JSON.stringify({status:"success", email: currentEmail, note:"Gunakan email ini di menu Tool."}, null, 2),'success');
-    
     const ei2=document.getElementById('emailInput');
     if(ei2) ei2.value=currentEmail;
     
   }catch(e){
     toast('Gagal buat email: ' + e.message);
-    showEmailTerm(JSON.stringify({status:"error", msg:e.message},null,2),'error');
   }finally{ setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false); }
 }
 
@@ -222,25 +217,25 @@ function copyEmail(){
   if(!v) return;
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(v).then(()=>toast('✅ Email di-copy!')).catch(()=>fallbackCopy(v));
-  } else {
-    fallbackCopy(v);
-  }
+  } else { fallbackCopy(v); }
 }
+
 function fallbackCopy(text) {
   const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed"; ta.style.left = "-9999px";
-  document.body.appendChild(ta);
-  ta.select();
-  try { document.execCommand('copy'); toast('✅ Email di-copy!'); } 
-  catch(e) { toast('❌ Gagal copy, salin manual aja.'); }
+  ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('✅ Email di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
   document.body.removeChild(ta);
 }
 
+// ==========================================
+// UI INBOX BARU (GANTIIN JSON)
+// ==========================================
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
-  showEmailTerm('Mengecek inbox...','');
+  
+  document.getElementById('inboxContainer').style.display = 'none';
   document.getElementById('alightBox').style.display='none';
   
   try{
@@ -250,101 +245,76 @@ async function handleCheckInbox(){
     
     if(data && data.emails && data.emails.length > 0){
       toast(`Ada ${data.emails.length} pesan!`);
-      
-      const formattedMails = data.emails.map(m => {
-        const textBody = m.body_text || m.text || m.html || "";
-        const links = extractLinksFromText(textBody);
-        return {
-          subj: m.subject,
-          from: m.from,
-          time: new Date(m.created_at || m.createdAt || Date.now()).toLocaleTimeString(),
-          links: links 
-        };
-      });
-      
-      const formattedData = { result: { success: true, numMess: data.emails.length, mails: formattedMails } };
-      showEmailTerm(JSON.stringify(formattedData, null, 2),'success');
-      updateAlightBox(formattedData);
+      renderInboxUI(data.emails);
     }else{
       toast('Inbox kosong.');
-      showEmailTerm(JSON.stringify({status:"warning", msg:"Belum ada pesan masuk. Tunggu 10-30 detik."},null,2),'warning');
+      const list = document.getElementById('inboxList');
+      list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:.8rem; border:1px dashed var(--line); border-radius:12px;">Belum ada pesan masuk. Tunggu 10-30 detik.</div>`;
+      document.getElementById('inboxContainer').style.display = 'block';
     }
   }catch(e){
     toast('Gagal cek inbox: ' + e.message);
-    showEmailTerm(JSON.stringify({status:"error", msg:e.message},null,2),'error');
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
+}
+
+// FUNGSI RENDER UI INBOX (BUKAN JSON)
+function renderInboxUI(emails) {
+  const list = document.getElementById('inboxList');
+  list.innerHTML = '';
+  
+  emails.forEach((m, i) => {
+    const textBody = m.body_text || m.text || m.html || "";
+    const links = extractLinksFromText(textBody);
+    
+    // Card UI persis kayak gambar
+    let card = `
+    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden;">
+      <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1rem;">📩</span>
+        <span style="font-weight:700; font-size:.8rem; color:var(--fg); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.subject || 'No Subject'}</span>
+      </div>
+      <div style="padding:12px 16px; font-size:.75rem; color:var(--muted); display:flex; flex-direction:column; gap:4px;">
+        <div><b>Pengirim:</b> ${m.from}</div>
+        <div><b>Waktu:</b> ${new Date(m.created_at || Date.now()).toLocaleTimeString()}</div>
+      </div>`;
+      
+    if(links.length > 0) {
+      card += `
+      <div style="padding:12px 16px; border-top:1px dashed var(--line);">
+        <div style="font-size:.65rem; font-weight:800; color:var(--accent); margin-bottom:8px;">LINK VERIFIKASI:</div>`;
+        
+      links.forEach(l => {
+        card += `
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+          <input type="text" readonly value="${l}" style="flex:1 1 100%; background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:8px; padding:10px; color:var(--accent-2); font-size:.65rem; font-family:monospace; outline:none;">
+          <button onclick="fallbackCopy('${l}')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">Salin</button>
+          <button onclick="window.open('${l}', '_blank')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">Buka</button>
+          <button onclick="validasiOtomatis('${l}', '${currentEmail}')" style="flex:1; padding:8px; border-radius:8px; border:none; background:var(--accent); color:#000; font-size:.75rem; font-weight:800; cursor:pointer;">Pakai</button>
+        </div>`;
+      });
+      card += `</div>`;
+    } else {
+      card += `
+      <div style="padding:12px 16px; border-top:1px dashed var(--line);">
+        <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Tidak ada link terdeteksi di body text.</div>
+        <button onclick="window.open('https://tempmail.ing', '_blank')" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">Lihat di Web TempMail</button>
+      </div>`;
+    }
+    
+    card += `</div>`;
+    list.innerHTML += card;
+  });
+  
+  document.getElementById('inboxContainer').style.display = 'block';
+  document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function extractLinksFromText(text) {
   if(!text) return [];
+  // Regex buat cari link
   const urlRegex = /(https?:\/\/[^\s"'<>]+)/gi;
   return text.match(urlRegex) || [];
 }
-
-function showEmailTerm(msg,type){
-  const term=document.getElementById('emailTerm'), body=document.getElementById('emailTermBody');
-  if(!term||!body) return;
-  body.className='term-body '+(type||'');
-  body.textContent = typeof msg==='object'? JSON.stringify(msg,null,2) : msg;
-  term.classList.add('show'); body.scrollTop=0;
-}
-
-function updateAlightBox(j) {
-  const box=document.getElementById('alightBox'); const list=document.getElementById('alightList');
-  if(!box||!list) return;
-  
-  let mails = j?.result?.mails || [];
-  let linksData = [];
-  
-  mails.forEach(m => {
-    (m.links || []).forEach(l => linksData.push({ 
-      link: l, 
-      subj: m.subj, 
-      time: m.time 
-    }));
-  });
-  
-  if(!linksData.length) { box.style.display='none'; return; }
-  
-  document.getElementById('alightCount').textContent = linksData.length + ' link';
-  window._viewData = linksData;
-  
-  renderInboxIdx(0); box.style.display='block';
-}
-
-function renderInboxIdx(idx) {
-  const list=document.getElementById('alightList'); if(!list) return;
-  const viewData = window._viewData || [];
-  if(idx < 0) idx = viewData.length - 1;
-  if(idx >= viewData.length) idx = 0;
-  const item = viewData[idx];
-  
-  list.innerHTML = `
-  <div style="padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);">
-    <div style="font-size:.75rem;color:var(--accent);margin-bottom:6px;font-weight:700;">${item.subj || 'Link Ditemukan'}</div>
-    <div style="font-size:.65rem;color:var(--muted);margin-bottom:12px;">${item.time}</div>
-    
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button onclick="copyLinkTxt('${item.link}')" style="flex:1 1 100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">📋 Salin Link</button>
-      
-      <button onclick="bukaDiChrome('${item.link}')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--accent);background:rgba(255,255,255,.1);color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">🌐 Buka</button>
-      
-      <button onclick="validasiOtomatis('${item.link}', '${currentEmail}')" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--accent);color:#050505;font-weight:800;font-size:.8rem;cursor:pointer;transition:0.3s;">⚡ Validasi</button>
-    </div>
-  </div>`;
-}
-
-window.copyLinkTxt = function(url) {
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(url).then(()=>toast('✅ Link di-copy!')).catch(()=>fallbackCopy(url));
-  } else {
-    fallbackCopy(url);
-  }
-};
-
-window.bukaDiChrome = function(url) {
-  window.open(url, '_blank');
-};
 
 window.validasiOtomatis = async function(link, email) {
   document.getElementById('emailInput').value = email;
