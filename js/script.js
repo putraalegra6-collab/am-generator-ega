@@ -167,10 +167,9 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (MAIL.TM API) - FIX CUSTOM & INBOX
+// TEMP MAIL (AKUNLAMA.COM API) - SESUAI REQUEST
 // ==========================================
 let currentEmail = "";
-let mailTmToken = ""; 
 let autoInterval = null;
 
 async function handleGenEmail(){
@@ -178,38 +177,20 @@ async function handleGenEmail(){
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   
   try{
-    // 1. Ambil domain dari mail.tm
-    const domRes = await fetch('https://api.mail.tm/domains');
-    const domData = await domRes.json();
-    const domain = domData['hydra:member'][0].domain;
-
-    // 2. Bikin nama (kalo kosong random, kalo diisi pake isian user)
+    // Bikin username (kalo kosong pake random)
     let finalUser = user;
     if(!finalUser){
-      finalUser = Math.random().toString(36).substring(2, 10);
+      const chars = 'abcdefghijklmnopqrstuvwxyz1234567890';
+      finalUser = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     }
-    const emailStr = `${finalUser}@${domain}`;
-    const password = "Password123!";
-
-    // 3. Daftar akun ke mail.tm
-    const accRes = await fetch('https://api.mail.tm/accounts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: emailStr, password: password })
-    });
     
-    if(!accRes.ok) throw new Error("Nama email sudah dipakai, coba nama lain.");
+    // Panggil API akunlama (sesuai script yang lu kasih)
+    const res = await fetch(`https://akunlama.com/api/list?recipient=${finalUser}`);
+    if(!res.ok) throw new Error("Gagal konek ke akunlama.");
     
-    // 4. Login buat dapet Token
-    const loginRes = await fetch('https://api.mail.tm/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: emailStr, password: password })
-    });
-    const loginData = await loginRes.json();
-    mailTmToken = loginData.token;
-    
-    currentEmail = emailStr;
+    // API akunlama langsung ngasih balik data inbox (walau kosong)
+    // Jadi kita set aja emailnya
+    currentEmail = `${finalUser}@akunlama.com`;
     document.getElementById('emailOutput').value = currentEmail;
     document.getElementById('emailResult').style.display = 'block';
     
@@ -251,38 +232,46 @@ function openAlightApp(url) {
   }
 }
 
-// CEK INBOX (PAKE MAIL.TM)
+// CEK INBOX (AKUNLAMA)
 async function handleCheckInbox(){
-  if(!currentEmail || !mailTmToken) { toast('Generate email dulu!'); return; }
+  if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
   
   document.getElementById('inboxContainer').style.display = 'none';
   
   try{
-    const res = await fetch(`https://api.mail.tm/messages`, {
-      headers: { 'Authorization': `Bearer ${mailTmToken}` }
-    });
+    const username = currentEmail.split('@')[0];
+    // Tarik list inbox dari akunlama
+    const res = await fetch(`https://akunlama.com/api/list?recipient=${username}`);
     const data = await res.json();
-    const messages = data['hydra:member'];
+    
+    // API akunlama balikin array 'data' atau 'messages' (tergantung respon)
+    let messages = data.messages || data.data || (Array.isArray(data) ? data : []);
 
     if(messages && messages.length > 0){
       toast(`Mendownload isi pesan...`);
       let fullEmails = [];
       
       for(let i=0; i < messages.length; i++){
-        let msgId = messages[i].id;
+        let msg = messages[i];
+        let storageKey = msg.storageKey || msg.id; // Key buat ambil detail
         
-        const detailRes = await fetch(`https://api.mail.tm/messages/${msgId}`, {
-          headers: { 'Authorization': `Bearer ${mailTmToken}` }
-        });
-        const detail = await detailRes.json();
+        let htmlBody = "";
+        
+        // Kalau ada storageKey, kita tarik HTML aslinya (buat dapet link)
+        if(storageKey){
+          try {
+            const detailRes = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${storageKey}`);
+            htmlBody = await detailRes.text();
+          } catch(e) {}
+        }
         
         fullEmails.push({
-          subject: detail.subject,
-          from: detail.from.address,
-          date: detail.createdAt,
-          html: Array.isArray(detail.html) ? detail.html.join("") : detail.html,
-          text: detail.text
+          subject: msg.subject || msg.subj || "Aktivasi Akun",
+          from: msg.from || "Alight Creative",
+          date: msg.date || msg.time || new Date().toISOString(),
+          html: htmlBody,
+          text: msg.bodyText || msg.body || msg.preview || ""
         });
       }
       
