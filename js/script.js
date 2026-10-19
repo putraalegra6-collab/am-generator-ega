@@ -174,7 +174,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMPMAIL.ING API)
+// TEMP MAIL (TEMPMAIL.ING API) - FIX TOTAL
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -184,7 +184,6 @@ async function handleGenEmail(){
   showEmailTerm('Membuat email sementara...','');
   
   try{
-    // API TempMail.ing dari kode lu
     const res = await fetch('https://api.tempmail.ing/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -192,9 +191,17 @@ async function handleGenEmail(){
     });
     const data = await res.json();
     
-    if(!data.email) throw new Error("Gagal dapet email dari server.");
+    // API TempMail.ing ngasih balik object nested di dalam property 'email'
+    let emailStr = "";
+    if (typeof data.email === 'object' && data.email !== null) {
+      emailStr = data.email.address;
+    } else if (typeof data.email === 'string') {
+      emailStr = data.email;
+    }
+
+    if(!emailStr) throw new Error("Gagal mengambil address email dari server.");
     
-    currentEmail = data.email;
+    currentEmail = emailStr;
     document.getElementById('emailOutput').value = currentEmail;
     document.getElementById('emailResult').style.display = 'block';
     
@@ -237,7 +244,6 @@ async function handleCheckInbox(){
   document.getElementById('alightBox').style.display='none';
   
   try{
-    // API TempMail.ing
     const encodedEmail = encodeURIComponent(currentEmail);
     const res = await fetch(`https://api.tempmail.ing/api/emails/${encodedEmail}`);
     const data = await res.json();
@@ -246,11 +252,12 @@ async function handleCheckInbox(){
       toast(`Ada ${data.emails.length} pesan!`);
       
       const formattedMails = data.emails.map(m => {
-        const links = extractLinksFromText(m.body_text || m.text);
+        const textBody = m.body_text || m.text || m.html || "";
+        const links = extractLinksFromText(textBody);
         return {
           subj: m.subject,
           from: m.from,
-          time: new Date(m.created_at).toLocaleTimeString(),
+          time: new Date(m.created_at || m.createdAt || Date.now()).toLocaleTimeString(),
           links: links 
         };
       });
