@@ -41,12 +41,26 @@ if(loader){
   resize();addEventListener('resize',resize,{passive:true});
   const N=innerWidth<600?14:22;
   for(let i=0;i<N;i++)pts.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.6+0.5,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22});
+  try{color=getComputedStyle(document.documentElement).getPropertyValue('--particle').trim()||color;}catch(e){}
   let running=true, typing=false, rafId=null, last=0;
   document.addEventListener('focusin',e=>{if(e.target && (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))typing=true;});
   document.addEventListener('focusout',e=>{if(e.target && (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))typing=false;});
   function tick(ts){ rafId=requestAnimationFrame(tick); if(!running || typing) return; if(ts-last<33) return; last=ts; ctx.clearRect(0,0,innerWidth,innerHeight); for(let i=0;i<pts.length;i++){ const p=pts[i]; p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>innerWidth)p.vx*=-1; if(p.y<0||p.y>innerHeight)p.vy*=-1; ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fillStyle=color;ctx.fill(); } }
   rafId=requestAnimationFrame(tick);
 })();
+
+// THEME GANTI WARNA
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.toggle('on',d.dataset.theme===theme));
+  const themeImg='img/avatar-'+theme+'.png';
+  const av=document.getElementById('creatorAvatar'); if(av) av.src=themeImg;
+  const navAv=document.getElementById('navAvatar'); if(navAv) navAv.src=themeImg;
+  const loadAv=document.getElementById('loaderAvatar'); if(loadAv) loadAv.src=themeImg;
+  try{localStorage.setItem('amTheme',theme);}catch(e){}
+}
+document.querySelectorAll('.theme-dot').forEach(dot=>{ dot.addEventListener('click',()=>applyTheme(dot.dataset.theme)); });
+try{applyTheme(document.documentElement.getAttribute('data-theme')||'mono');}catch(e){}
 
 window.addEventListener('load',()=>{ document.querySelectorAll('.reveal').forEach(el=>{ if(!isReturn){ setTimeout(()=>el.classList.add('in'),(el.style.getPropertyValue('--d').replace('s','')||0)*1000); }else{ el.classList.add('in'); } }); });
 
@@ -72,7 +86,7 @@ function showTerm(msg,type){
 }
 function hideTerm(){const term=document.getElementById('term');if(term)term.classList.remove('show');}
 
-// MODAL ACCESS KEY
+// MODAL KEY
 const keyModal=document.getElementById('keyModal');
 const keyHint=document.getElementById('keyHint');
 const keyErrorTop=document.getElementById('keyErrorTop');
@@ -102,7 +116,7 @@ function handleUnlock(){
   },600);
 }
 
-// TABS SMOOTH
+// TABS
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.getElementById('tabSendBtn').classList.toggle('active',tab==='send');
@@ -184,7 +198,6 @@ async function handleGenEmail(){
   showEmailTerm('Membuat email sementara...','');
   
   try{
-    let url = "https://akunlama.com/api/list?recipient=";
     let finalUser = user;
     if(!finalUser){
       const frontName = ["haru","yuki","sora","nana","mika","iroha","akari","hina","yuna","rin"];
@@ -192,7 +205,7 @@ async function handleGenEmail(){
       finalUser = `${frontName[Math.floor(Math.random()*frontName.length)]}_${endName[Math.floor(Math.random()*endName.length)]}${Math.floor(Math.random()*99)}`;
     }
     
-    url += finalUser;
+    const url = `https://akunlama.com/api/list?recipient=${finalUser}`;
     const res = await fetch(url);
     const data = await res.json();
     
@@ -203,27 +216,29 @@ async function handleGenEmail(){
     toast(`Email dibuat!`);
     showEmailTerm(JSON.stringify({status:"success", email: currentEmail, note:"Cek inbox secara berkala."}, null, 2),'success');
     
+    const ei2=document.getElementById('emailInput');
+    if(ei2) ei2.value=currentEmail;
+    
   }catch(e){
     toast('Gagal buat email: ' + e.message);
     showEmailTerm(JSON.stringify({status:"error", msg:e.message},null,2),'error');
   }finally{ setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false); }
 }
 
-// FIX TOMBOL COPY
+// FIX TOMBOL COPY (Biar support semua browser/WebView HP)
 function copyEmail(){
   const v=document.getElementById('emailOutput')?.value;
   if(!v) return;
   
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(v).then(()=>toast('✅ Email berhasil di-copy!')).catch(()=>toast('❌ Gagal copy'));
+    navigator.clipboard.writeText(v).then(()=>toast('✅ Email di-copy!')).catch(()=>toast('❌ Gagal copy'));
   } else {
     const ta = document.createElement("textarea");
     ta.value = v;
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
+    ta.style.position = "fixed"; ta.style.left = "-9999px";
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); toast('✅ Email berhasil di-copy!'); } 
+    try { document.execCommand('copy'); toast('✅ Email di-copy!'); } 
     catch(e) { toast('❌ Gagal copy'); }
     document.body.removeChild(ta);
   }
@@ -256,7 +271,7 @@ async function handleCheckInbox(){
       updateAlightBox(formattedData);
     }else{
       toast('Inbox kosong.');
-      showEmailTerm(JSON.stringify({status:"warning", msg:"Belum ada pesan masuk."},null,2),'warning');
+      showEmailTerm(JSON.stringify({status:"warning", msg:"Belum ada pesan masuk. Tunggu 10-30 detik."},null,2),'warning');
     }
   }catch(e){
     toast('Gagal cek inbox: ' + e.message);
