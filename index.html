@@ -107,8 +107,12 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
       <div class="sec-head"><p class="kicker">Email Generator</p><h2>Temp Email</h2><p>Generate email sementara untuk testing &amp; verifikasi. By Egaa</p></div>
       <div class="tool-card">
         
-        <!-- UI PILIH DOMAIN UDAH DIHAPUS -->
-        <div class="field"><label><i>▸</i>Username (opsional)</label><input type="text" id="emailUser" placeholder="kosongkan = random" autocomplete="off"></div>
+        <!-- DROPDOWN DOMAIN UDAH DIHAPUS DARI HTML -->
+        
+        <div class="field">
+          <label><i>▸</i>Username (Kosongkan = Random)</label>
+          <input type="text" id="emailUser" placeholder="contoh: egaa123" autocomplete="off">
+        </div>
         <button class="btn btn-primary btn-block" id="btnGenEmail" onclick="handleGenEmail()" style="margin-top:16px"><span id="btnGenEmailText">Generate Email</span><span class="loader-spin" id="loaderGenEmail"></span></button>
         
         <div id="emailResult" style="display:none;margin-top:18px">
@@ -125,7 +129,7 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
           </div>
         </div>
 
-        <!-- UI INBOX BARU -->
+        <!-- UI INBOX -->
         <div id="inboxContainer" style="margin-top:18px; display:none;">
           <div style="font-size:.66rem; letter-spacing:.2em; color:var(--muted); margin-bottom:10px; font-weight:700;">INBOX LOG</div>
           <div id="inboxList" style="display:flex; flex-direction:column; gap:12px;"></div>
