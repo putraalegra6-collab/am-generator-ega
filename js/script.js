@@ -167,7 +167,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (AKUNLAMA.COM API) - FIX FULL
+// TEMP MAIL (AKUNLAMA.COM API)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -228,7 +228,7 @@ function openAlightApp(url) {
   }
 }
 
-// CEK INBOX (AKUNLAMA) - v2: decode quoted-printable, ambil href asli
+// CEK INBOX (AKUNLAMA)
 const linkStore = [];
 
 function escHtml(s){
@@ -254,18 +254,24 @@ async function handleCheckInbox(){
       for(const msg of messages){
         const storageKey = msg.storageKey || msg.key || msg.id;
         let rawHtml = '';
+        let debug = 'tanpa storageKey';
         if(storageKey){
           try{
             const detailRes = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${storageKey}`);
             rawHtml = await detailRes.text();
-          }catch(e){ console.log('Gagal tarik html', e); }
+            debug = `getHtml status ${detailRes.status}, panjang ${rawHtml.length}`;
+          }catch(e){
+            debug = `getHtml gagal: ${e.message}`;
+            console.log('Gagal tarik html', e);
+          }
         }
         fullEmails.push({
           subject: msg.subject || msg.subj || 'Aktivasi Akun',
           from: msg.from || 'Alight Creative',
           date: msg.date || msg.time || new Date().toISOString(),
           html: rawHtml,
-          text: msg.bodyText || msg.body || msg.preview || ''
+          text: msg.bodyText || msg.body || msg.preview || '',
+          debug
         });
       }
       renderInboxUI(fullEmails);
@@ -326,6 +332,7 @@ function renderInboxUI(emails) {
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line);">
         <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Link tidak ditemukan. Coba klik Cek Inbox lagi.</div>
+        <div style="font-size:.6rem; color:var(--accent-2); font-family:monospace; margin-bottom:8px;">DEBUG: ${escHtml(m.debug || '-')}</div>
         <button data-act="refresh" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🔄 Refresh Cek Inbox</button>
       </div>`;
     }
