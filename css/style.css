@@ -1,6 +1,6 @@
 :root{
   --maxw: 980px;
-  --ease: cubic-bezier(0.25, 1, 0.5, 1); /* Spring animation */
+  --ease: cubic-bezier(0.25, 1, 0.5, 1); 
   --radius: 18px;
   
   --bg-0:#050505;  --bg-1:#0c0c0c;
@@ -33,7 +33,7 @@ body::before{
     linear-gradient(160deg,var(--bg-1),var(--bg-0));
 }
 
-/* BACKGROUND BINTANG */
+/* BACKGROUND */
 .grid-bg{
   position:fixed;inset:-2px;z-index:-2;pointer-events:none;
   background-image:
