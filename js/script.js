@@ -50,7 +50,7 @@ if(loader){
 
 window.addEventListener('load',()=>{ document.querySelectorAll('.reveal').forEach(el=>{ if(!isReturn){ setTimeout(()=>el.classList.add('in'),(el.style.getPropertyValue('--d').replace('s','')||0)*1000); }else{ el.classList.add('in'); } }); });
 
-// TOAST
+// TOAST & LOADING
 let toastTimer=null;
 function toast(msg){
   let t=document.getElementById('toast');
@@ -58,12 +58,10 @@ function toast(msg){
   t.textContent=msg;t.classList.add('show');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
 }
-
 function setLoading(btnId,loadId,textId,on){
   const b=document.getElementById(btnId),l=document.getElementById(loadId),t=document.getElementById(textId);
   if(b)b.disabled=on; if(l)l.style.display=on?'inline-block':'none'; if(t)t.style.opacity=on?'.6':'1';
 }
-
 function showTerm(msg,type){
   const term=document.getElementById('term'),body=document.getElementById('termBody');
   if(!term||!body)return; body.className='term-body '+(type||'');
@@ -77,7 +75,6 @@ const keyModal=document.getElementById('keyModal');
 const keyHint=document.getElementById('keyHint');
 const keyErrorTop=document.getElementById('keyErrorTop');
 let unlocked=false; let pendingAction=null;
-
 function setHint(json){if(keyHint)keyHint.textContent=JSON.stringify(json,null,2);}
 function showTopError(show){ if(!keyErrorTop) return; if(show){ keyErrorTop.classList.add('show'); } else { keyErrorTop.classList.remove('show'); } }
 function openKeyModal(action){
@@ -112,9 +109,8 @@ function switchTab(tab){
   hideTerm();
 }
 
-// API AM
+// API AM (NOXXY)
 const emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 async function handleSend(){
   const email=document.getElementById('emailInput').value.trim();
   if(!unlocked){openKeyModal('send');return;}
@@ -143,13 +139,10 @@ async function handleVerify(){
   try{
     const res=await fetch(`${API_BASE}/verify-link`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, magicLink: link }) });
     const data=await res.json();
-    
     if(!res.ok || data?.ok===false) throw new Error(data?.msg || data?.error || 'Gagal validasi');
-    
     toast('🎉 Aktivasi Berhasil!');
     showTerm(JSON.stringify({"status":"success","msg":"Akun berhasil di aktivasi!"},null,2),'success');
     showPremiumModal(data);
-    
   }catch(e){
     toast('❌ Gagal: ' + e.message);
     showTerm(JSON.stringify({"status":"error","msg":e.message},null,2),'error');
@@ -174,19 +167,25 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMPMAIL.ING API) - FULL BACA PESAN
+// TEMP MAIL (TEMPMAIL.ING API) - BISA CUSTOM & FULL HTML
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
 
 async function handleGenEmail(){
+  const user = document.getElementById('emailUser')?.value?.trim();
+  const domain = document.getElementById('emailDomain')?.value || 'mailto.plus';
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   
   try{
+    const payload = { duration: 10 };
+    if(user) payload.prefix = user;
+    if(domain) payload.domain = domain;
+
     const res = await fetch('https://api.tempmail.ing/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ duration: 10 })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     
@@ -228,33 +227,26 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
 }
 
-// FUNGSI BUKA APP ALIGHT MOTION LANGSUNG (BUKAN PLAYSTORE)
+// FUNGSI BUKA APP ALIGHT MOTION
 function openAlightApp(url) {
-  // Cek apakah user pake Android
   const isAndroid = /Android/i.test(navigator.userAgent);
-  
   if (isAndroid) {
     toast("Membuka Alight Motion...");
-    // Ubah URL http jadi intent scheme agar langsung ngebuka app
     const cleanUrl = url.replace(/^https?:\/\//, '');
-    // package=com.alightcreative.motion (ID package Alight Motion)
     const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.alightcreative.motion;end`;
     window.location.href = intentUrl;
-    
-    // Fallback: kalau app gaada, buka browser setelah delay
     setTimeout(() => { window.open(url, '_blank'); }, 1000);
   } else {
     window.open(url, '_blank');
   }
 }
 
-// CEK INBOX + FULL FETCH PESAN
+// CEK INBOX 
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
   
   document.getElementById('inboxContainer').style.display = 'none';
-  document.getElementById('alightBox').style.display='none';
   
   try{
     const encodedEmail = encodeURIComponent(currentEmail);
@@ -266,26 +258,24 @@ async function handleCheckInbox(){
       
       let fullEmails = [];
       
-      // Loop semua email (biasanya cuma 1 yg baru)
       for(let i = 0; i < data.emails.length; i++) {
         let msg = data.emails[i];
         let msgId = msg.id || msg._id;
         
-        // Fetch detail penuh (WAJIB buat dapetin body HTML & link)
         try {
+          // Nembak ke API buat dapet Full HTML
           const detailRes = await fetch(`https://api.tempmail.ing/api/emails/${encodedEmail}/${msgId}`);
           const detailData = await detailRes.json();
           
-          // GABUNGIN body html, text, sama preview dari list
           fullEmails.push({
             subject: msg.subject || "Aktivasi Akun",
             from: msg.from || "Alight Creative",
             date: msg.date || msg.created_at,
+            // Ambil HTML mentahnya biar bisa di scan
             html: detailData.html || detailData.body_html || "",
             text: detailData.text || detailData.body_text || msg.preview || ""
           });
         } catch(err) {
-          // Kalo gagal fetch detail, ya pake data dari list aja
           fullEmails.push({
             subject: msg.subject || "Aktivasi Akun",
             from: msg.from || "Alight Creative",
@@ -298,7 +288,7 @@ async function handleCheckInbox(){
       
       renderInboxUI(fullEmails); 
     }else{
-      toast('Inbox kosong.');
+      toast('Inbox kosong. Tunggu 10 detik.');
       const list = document.getElementById('inboxList');
       list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:.8rem; border:1px dashed var(--line); border-radius:12px;">Belum ada pesan masuk. Tunggu 10-30 detik.</div>`;
       document.getElementById('inboxContainer').style.display = 'block';
@@ -308,53 +298,58 @@ async function handleCheckInbox(){
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
 }
 
-// RENDER UI INBOX (BUKAN JSON)
+// RENDER UI INBOX (PERSIS KAYAK LOVABLE)
 function renderInboxUI(emails) {
   const list = document.getElementById('inboxList');
   list.innerHTML = '';
   
   emails.forEach((m, i) => {
-    // Coba ekstrak dari HTML dulu, kalo gagal dari Text
+    // Ekstrak Link dari HTML
     let links = extractLinksFromText(m.html);
+    // Kalau gak dapet, coba dari Text
     if (links.length === 0) links = extractLinksFromText(m.text);
     
     let timeStr = m.date ? new Date(m.date).toLocaleTimeString() : "-";
 
     let card = `
-    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:12px;">
-      <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:flex-start; gap:8px;">
-        <span style="font-size:1.2rem; margin-top:2px;">📩</span>
+    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+      <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:flex-start; gap:10px;">
+        <div style="background: rgba(74,222,128,.1); padding: 6px; border-radius: 8px; color: var(--accent);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </div>
         <div style="flex:1;">
-          <div style="font-weight:700; font-size:.85rem; color:var(--fg); line-height:1.3;">${m.subject}</div>
-          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Dari: ${m.from}</div>
+          <div style="font-weight:800; font-size:.85rem; color:var(--fg); line-height:1.3;">${m.subject}</div>
+          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Pengirim: ${m.from}</div>
           <div style="font-size:.65rem; color:var(--muted);">Waktu: ${timeStr}</div>
         </div>
       </div>`;
       
     if(links.length > 0) {
       card += `
-      <div style="padding:12px 16px; border-top:1px dashed var(--line); background: rgba(74,222,128,.03);">
-        <div style="font-size:.65rem; font-weight:800; color:var(--accent); margin-bottom:8px;">🔗 LINK AKTIVASI DITEMUKAN:</div>`;
+      <div style="padding:12px 16px; border-top:1px dashed var(--line);">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+          <span style="color:var(--warn); font-size:.8rem;">⚡</span>
+          <span style="font-size:.65rem; font-weight:800; color:var(--muted); letter-spacing:.1em;">LINK VERIFIKASI:</span>
+        </div>`;
         
       links.forEach(l => {
         // Bersihin HTML entities
         let cleanLink = l.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
         card += `
-        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-          <input type="text" readonly value="${cleanLink}" style="flex:1 1 100%; background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:8px; padding:10px; color:var(--accent-2); font-size:.65rem; font-family:monospace; outline:none; margin-bottom:4px;">
-          
-          <button onclick="fallbackCopy('${cleanLink}')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">📋 Salin</button>
-          
-          <button onclick="openAlightApp('${cleanLink}')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
-          
-          <button onclick="validasiOtomatis('${cleanLink}', '${currentEmail}')" style="flex:1; padding:8px; border-radius:8px; border:none; background:var(--accent); color:#000; font-size:.75rem; font-weight:800; cursor:pointer;">⚡ Pakai</button>
+        <div style="background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px;">
+          <div style="font-family:monospace; font-size:.65rem; color:var(--accent-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:8px;">${cleanLink}</div>
+          <div style="display:flex; gap:6px;">
+            <button onclick="fallbackCopy('${cleanLink}')" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">📋 Salin</button>
+            <button onclick="openAlightApp('${cleanLink}')" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
+            <button onclick="validasiOtomatis('${cleanLink}', '${currentEmail}')" style="flex:1; padding:8px; border-radius:6px; border:none; background:var(--accent); color:#000; font-size:.7rem; font-weight:800; cursor:pointer;">⚡ Pakai</button>
+          </div>
         </div>`;
       });
       card += `</div>`;
     } else {
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line);">
-        <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Gagal mengekstrak link (mungkin email masih loading). Coba klik Cek Inbox lagi.</div>
+        <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Link tidak ditemukan. Coba klik Cek Inbox lagi.</div>
         <button onclick="handleCheckInbox()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🔄 Refresh Cek Inbox</button>
       </div>`;
     }
@@ -367,31 +362,26 @@ function renderInboxUI(emails) {
   document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-// Ekstrak Link (Regex Diperkuat)
+// REGEX SUPER KUAT (NANGKEP HREF DI DALAM HTML)
 function extractLinksFromText(text) {
   if(!text) return [];
   
-  // Cari url apapun
+  // Regex nangkep href="..." atau link biasa
   const urlRegex = /(https?:\/\/[^\s"'<>\\]+)/gi;
   let matches = text.match(urlRegex) || [];
   
-  // Decode HTML entities (misal &amp; jadi &)
-  matches = matches.map(url => url.replace(/&amp;/g, '&').replace(/&quot;/g, '"'));
+  // Decode entities
+  matches = matches.map(url => url.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/%3D/g, '='));
 
-  // Prioritas 1: Link Alight/Firebase
+  // Filter cuma link Alight/Firebase
   const alightLinks = matches.filter(link => 
     link.includes('alight') || 
     link.includes('firebaseapp') || 
     link.includes('auth_action')
   );
 
-  if (alightLinks.length > 0) {
-    // Hapus duplikat
-    return [...new Set(alightLinks)];
-  }
-
-  // Prioritas 2: Kalo gak ada link alight, ambil semua link
-  return [...new Set(matches)];
+  if (alightLinks.length > 0) return [...new Set(alightLinks)];
+  return []; // Kalo gak ada link alight, jangan tampilin link sampah
 }
 
 window.validasiOtomatis = async function(link, email) {
