@@ -174,7 +174,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMPMAIL.ING API - FULL DI WEB SENDIRI)
+// TEMP MAIL (TEMPMAIL.ING API) - FULL BACA PESAN
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -228,9 +228,27 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
 }
 
-// ==========================================
-// UI INBOX (READ FULL MESSAGE & EXTRACT LINK)
-// ==========================================
+// FUNGSI BUKA APP ALIGHT MOTION LANGSUNG (BUKAN PLAYSTORE)
+function openAlightApp(url) {
+  // Cek apakah user pake Android
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  
+  if (isAndroid) {
+    toast("Membuka Alight Motion...");
+    // Ubah URL http jadi intent scheme agar langsung ngebuka app
+    const cleanUrl = url.replace(/^https?:\/\//, '');
+    // package=com.alightcreative.motion (ID package Alight Motion)
+    const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.alightcreative.motion;end`;
+    window.location.href = intentUrl;
+    
+    // Fallback: kalau app gaada, buka browser setelah delay
+    setTimeout(() => { window.open(url, '_blank'); }, 1000);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+// CEK INBOX + FULL FETCH PESAN
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
@@ -244,13 +262,41 @@ async function handleCheckInbox(){
     const data = await res.json();
     
     if(data && data.emails && data.emails.length > 0){
-      toast(`Membaca pesan...`);
-      // Ambil detail penuh biar dapet link asli (karena list cuma kasih preview)
-      const msgId = data.emails[0].id || data.emails[0]._id;
-      const detailRes = await fetch(`https://api.tempmail.ing/api/emails/${encodedEmail}/${msgId}`);
-      const detailData = await detailRes.json();
+      toast(`Mendownload isi pesan...`);
       
-      renderInboxUI([detailData]); // Kirim data full ke fungsi UI
+      let fullEmails = [];
+      
+      // Loop semua email (biasanya cuma 1 yg baru)
+      for(let i = 0; i < data.emails.length; i++) {
+        let msg = data.emails[i];
+        let msgId = msg.id || msg._id;
+        
+        // Fetch detail penuh (WAJIB buat dapetin body HTML & link)
+        try {
+          const detailRes = await fetch(`https://api.tempmail.ing/api/emails/${encodedEmail}/${msgId}`);
+          const detailData = await detailRes.json();
+          
+          // GABUNGIN body html, text, sama preview dari list
+          fullEmails.push({
+            subject: msg.subject || "Aktivasi Akun",
+            from: msg.from || "Alight Creative",
+            date: msg.date || msg.created_at,
+            html: detailData.html || detailData.body_html || "",
+            text: detailData.text || detailData.body_text || msg.preview || ""
+          });
+        } catch(err) {
+          // Kalo gagal fetch detail, ya pake data dari list aja
+          fullEmails.push({
+            subject: msg.subject || "Aktivasi Akun",
+            from: msg.from || "Alight Creative",
+            date: msg.date || msg.created_at,
+            html: "",
+            text: msg.preview || ""
+          });
+        }
+      }
+      
+      renderInboxUI(fullEmails); 
     }else{
       toast('Inbox kosong.');
       const list = document.getElementById('inboxList');
@@ -262,31 +308,25 @@ async function handleCheckInbox(){
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
 }
 
-// FUNGSI RENDER UI INBOX (BUKAN JSON & FULL DI WEB KITA)
+// RENDER UI INBOX (BUKAN JSON)
 function renderInboxUI(emails) {
   const list = document.getElementById('inboxList');
   list.innerHTML = '';
   
   emails.forEach((m, i) => {
-    // Ambil body HTML atau text
-    const htmlBody = m.html || "";
-    const textBody = m.text || m.body_text || "";
+    // Coba ekstrak dari HTML dulu, kalo gagal dari Text
+    let links = extractLinksFromText(m.html);
+    if (links.length === 0) links = extractLinksFromText(m.text);
     
-    // Ekstrak link dari HTML atau text
-    let links = extractLinksFromText(htmlBody);
-    if (links.length === 0) links = extractLinksFromText(textBody);
-
-    const sender = m.from || m.from_email || "Alight Creative";
-    const subject = m.subject || "Aktivasi Akun";
-    const timeStr = new Date(m.created_at || m.date || Date.now()).toLocaleTimeString();
+    let timeStr = m.date ? new Date(m.date).toLocaleTimeString() : "-";
 
     let card = `
     <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:12px;">
       <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:flex-start; gap:8px;">
         <span style="font-size:1.2rem; margin-top:2px;">📩</span>
         <div style="flex:1;">
-          <div style="font-weight:700; font-size:.85rem; color:var(--fg); line-height:1.3;">${subject}</div>
-          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Dari: ${sender}</div>
+          <div style="font-weight:700; font-size:.85rem; color:var(--fg); line-height:1.3;">${m.subject}</div>
+          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Dari: ${m.from}</div>
           <div style="font-size:.65rem; color:var(--muted);">Waktu: ${timeStr}</div>
         </div>
       </div>`;
@@ -294,16 +334,19 @@ function renderInboxUI(emails) {
     if(links.length > 0) {
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line); background: rgba(74,222,128,.03);">
-        <div style="font-size:.65rem; font-weight:800; color:var(--accent); margin-bottom:8px;">LINK VERIFIKASI DITEMUKAN:</div>`;
+        <div style="font-size:.65rem; font-weight:800; color:var(--accent); margin-bottom:8px;">🔗 LINK AKTIVASI DITEMUKAN:</div>`;
         
       links.forEach(l => {
-        // Bersihin HTML entities (misal &amp; jadi &)
+        // Bersihin HTML entities
         let cleanLink = l.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
         card += `
         <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
           <input type="text" readonly value="${cleanLink}" style="flex:1 1 100%; background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:8px; padding:10px; color:var(--accent-2); font-size:.65rem; font-family:monospace; outline:none; margin-bottom:4px;">
+          
           <button onclick="fallbackCopy('${cleanLink}')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">📋 Salin</button>
-          <button onclick="window.open('${cleanLink}', '_blank')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
+          
+          <button onclick="openAlightApp('${cleanLink}')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
+          
           <button onclick="validasiOtomatis('${cleanLink}', '${currentEmail}')" style="flex:1; padding:8px; border-radius:8px; border:none; background:var(--accent); color:#000; font-size:.75rem; font-weight:800; cursor:pointer;">⚡ Pakai</button>
         </div>`;
       });
@@ -311,7 +354,8 @@ function renderInboxUI(emails) {
     } else {
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line);">
-        <div style="font-size:.7rem; color:var(--muted); font-style:italic;">Gagal mengekstrak link dari pesan ini.</div>
+        <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Gagal mengekstrak link (mungkin email masih loading). Coba klik Cek Inbox lagi.</div>
+        <button onclick="handleCheckInbox()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🔄 Refresh Cek Inbox</button>
       </div>`;
     }
     
@@ -323,21 +367,31 @@ function renderInboxUI(emails) {
   document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-// Ekstrak Link (Lebih kuat buat nangkep link firebase)
+// Ekstrak Link (Regex Diperkuat)
 function extractLinksFromText(text) {
   if(!text) return [];
-  // Cari link alight-creative atau firebaseapp
-  const regex = /(https?:\/\/[^\s"'<>]+)/gi;
-  const matches = text.match(regex) || [];
   
-  // Filter cuma link yang ada hubungannya sama alight/firebase biar gak berantakan
-  const validLinks = matches.filter(link => 
+  // Cari url apapun
+  const urlRegex = /(https?:\/\/[^\s"'<>\\]+)/gi;
+  let matches = text.match(urlRegex) || [];
+  
+  // Decode HTML entities (misal &amp; jadi &)
+  matches = matches.map(url => url.replace(/&amp;/g, '&').replace(/&quot;/g, '"'));
+
+  // Prioritas 1: Link Alight/Firebase
+  const alightLinks = matches.filter(link => 
     link.includes('alight') || 
     link.includes('firebaseapp') || 
     link.includes('auth_action')
   );
-  
-  return validLinks.length > 0 ? validLinks : matches.slice(0, 3); // Kalau gak ada, ambil 3 link aja
+
+  if (alightLinks.length > 0) {
+    // Hapus duplikat
+    return [...new Set(alightLinks)];
+  }
+
+  // Prioritas 2: Kalo gak ada link alight, ambil semua link
+  return [...new Set(matches)];
 }
 
 window.validasiOtomatis = async function(link, email) {
