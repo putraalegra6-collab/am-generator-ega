@@ -107,21 +107,7 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
       <div class="sec-head"><p class="kicker">Email Generator</p><h2>Temp Email</h2><p>Generate email sementara untuk testing &amp; verifikasi. By Egaa</p></div>
       <div class="tool-card">
         
-        <div class="field" style="margin-bottom:16px">
-          <label><i>▸</i>Pilih Domain</label>
-          <select id="emailDomain" style="width:100%;padding:14px 16px;background:var(--input);border:1px solid var(--line);border-radius:12px;color:var(--fg);font-size:.9rem;outline:none;font-family:monospace;">
-            <option value="mailto.plus">@mailto.plus</option>
-            <option value="fexpost.com">@fexpost.com</option>
-            <option value="fexbox.org">@fexbox.org</option>
-            <option value="mailbox.in.ua">@mailbox.in.ua</option>
-            <option value="rover.info">@rover.info</option>
-            <option value="chitthi.in">@chitthi.in</option>
-            <option value="fextemp.com">@fextemp.com</option>
-            <option value="any.pink">@any.pink</option>
-            <option value="merepost.com">@merepost.com</option>
-          </select>
-        </div>
-
+        <!-- UI PILIH DOMAIN UDAH DIHAPUS -->
         <div class="field"><label><i>▸</i>Username (opsional)</label><input type="text" id="emailUser" placeholder="kosongkan = random" autocomplete="off"></div>
         <button class="btn btn-primary btn-block" id="btnGenEmail" onclick="handleGenEmail()" style="margin-top:16px"><span id="btnGenEmailText">Generate Email</span><span class="loader-spin" id="loaderGenEmail"></span></button>
         
@@ -139,19 +125,10 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
           </div>
         </div>
 
-        <!-- UI INBOX BARU (BUKAN JSON) -->
+        <!-- UI INBOX BARU -->
         <div id="inboxContainer" style="margin-top:18px; display:none;">
           <div style="font-size:.66rem; letter-spacing:.2em; color:var(--muted); margin-bottom:10px; font-weight:700;">INBOX LOG</div>
           <div id="inboxList" style="display:flex; flex-direction:column; gap:12px;"></div>
-        </div>
-
-        <div id="alightBox" style="display:none;margin-top:14px;padding:18px;border:1px solid var(--accent);border-radius:16px;background:linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,.02));backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.35)">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);flex:0 0 auto"></span>
-            <span style="font-size:.70rem;letter-spacing:.20em;font-weight:800;color:var(--accent)">LINK TERDETEKSI</span>
-            <span id="alightCount" style="margin-left:auto;font-size:.60rem;letter-spacing:.10em;font-weight:700;color:var(--fg);background:var(--accent);padding:4px 10px;border-radius:99px">0</span>
-          </div>
-          <div id="alightList" style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow:auto;padding-right:4px"></div>
         </div>
 
       </div>
@@ -169,7 +146,6 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
     </div>
   </section>
 
-  <!-- CREATOR DIPERBAGUS & NOMOR DIHAPUS -->
   <section class="page" id="page-creator">
     <div class="sec" style="padding-top:40px">
       <div class="sec-head"><p class="kicker">Creator</p><h2>AM Creator</h2></div>
