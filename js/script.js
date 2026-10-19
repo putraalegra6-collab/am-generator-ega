@@ -167,19 +167,23 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (MAIL.GW API) - BISA CUSTOM & PASTI DAPET LINK
+// TEMP MAIL (MAIL.TM API) - FIX CUSTOM & INBOX
 // ==========================================
 let currentEmail = "";
-let mailGwToken = ""; 
+let mailTmToken = ""; 
 let autoInterval = null;
 
 async function handleGenEmail(){
   const user = document.getElementById('emailUser')?.value?.trim();
-  const domain = document.getElementById('emailDomain')?.value || 'mail.gw';
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   
   try{
-    // Bikin nama (kalo kosong pake random)
+    // 1. Ambil domain dari mail.tm
+    const domRes = await fetch('https://api.mail.tm/domains');
+    const domData = await domRes.json();
+    const domain = domData['hydra:member'][0].domain;
+
+    // 2. Bikin nama (kalo kosong random, kalo diisi pake isian user)
     let finalUser = user;
     if(!finalUser){
       finalUser = Math.random().toString(36).substring(2, 10);
@@ -187,23 +191,23 @@ async function handleGenEmail(){
     const emailStr = `${finalUser}@${domain}`;
     const password = "Password123!";
 
-    // 1. Daftar akun ke Mail.gw
-    const accRes = await fetch('https://api.mail.gw/accounts', {
+    // 3. Daftar akun ke mail.tm
+    const accRes = await fetch('https://api.mail.tm/accounts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address: emailStr, password: password })
     });
     
-    if(!accRes.ok) throw new Error("Nama email sudah dipakai / gagal daftar. Coba nama lain.");
+    if(!accRes.ok) throw new Error("Nama email sudah dipakai, coba nama lain.");
     
-    // 2. Login buat dapet Token
-    const loginRes = await fetch('https://api.mail.gw/token', {
+    // 4. Login buat dapet Token
+    const loginRes = await fetch('https://api.mail.tm/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address: emailStr, password: password })
     });
     const loginData = await loginRes.json();
-    mailGwToken = loginData.token;
+    mailTmToken = loginData.token;
     
     currentEmail = emailStr;
     document.getElementById('emailOutput').value = currentEmail;
@@ -247,16 +251,16 @@ function openAlightApp(url) {
   }
 }
 
-// CEK INBOX (PAKE MAIL.GW)
+// CEK INBOX (PAKE MAIL.TM)
 async function handleCheckInbox(){
-  if(!currentEmail || !mailGwToken) { toast('Generate email dulu!'); return; }
+  if(!currentEmail || !mailTmToken) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
   
   document.getElementById('inboxContainer').style.display = 'none';
   
   try{
-    const res = await fetch(`https://api.mail.gw/messages`, {
-      headers: { 'Authorization': `Bearer ${mailGwToken}` }
+    const res = await fetch(`https://api.mail.tm/messages`, {
+      headers: { 'Authorization': `Bearer ${mailTmToken}` }
     });
     const data = await res.json();
     const messages = data['hydra:member'];
@@ -268,8 +272,8 @@ async function handleCheckInbox(){
       for(let i=0; i < messages.length; i++){
         let msgId = messages[i].id;
         
-        const detailRes = await fetch(`https://api.mail.gw/messages/${msgId}`, {
-          headers: { 'Authorization': `Bearer ${mailGwToken}` }
+        const detailRes = await fetch(`https://api.mail.tm/messages/${msgId}`, {
+          headers: { 'Authorization': `Bearer ${mailTmToken}` }
         });
         const detail = await detailRes.json();
         
