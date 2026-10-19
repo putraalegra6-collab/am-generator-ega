@@ -165,6 +165,7 @@ function showPremiumModal(data) {
 
   document.getElementById('pmEmail').textContent = email;
   document.getElementById('pmUid').textContent = uid;
+  document.getElementById('pmPlan').textContent = "Premium"; // GANTI JADI PREMIUM
   document.getElementById('pmDate').textContent = dateStr;
   
   modal.classList.add('show');
@@ -173,7 +174,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMPMail.PLUS API - Fix 3 Tombol)
+// TEMP MAIL (TEMPMail.PLUS API)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -184,7 +185,6 @@ async function handleGenEmail(){
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   showEmailTerm('Membuat email sementara...','');
   
-  // Bikin random string kalau user kosong
   let finalUser = user;
   if(!finalUser){
     const chars = 'abcdefghijklmnopqrstuvwxyz1234567890';
@@ -202,21 +202,27 @@ async function handleGenEmail(){
   }, 800); 
 }
 
+// FIX TOMBOL COPY EMAIL (PASTI JALAN DI HP)
 function copyEmail(){
   const v=document.getElementById('emailOutput')?.value;
   if(!v) return;
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(v).then(()=>toast('✅ Email di-copy!')).catch(()=>toast('❌ Gagal copy'));
+    navigator.clipboard.writeText(v).then(()=>toast('✅ Email berhasil di-copy!')).catch(()=>fallbackCopy(v));
   } else {
-    const ta = document.createElement("textarea");
-    ta.value = v; ta.style.position = "fixed"; ta.style.left = "-9999px";
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('✅ Email di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
-    document.body.removeChild(ta);
+    fallbackCopy(v);
   }
 }
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed"; ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); toast('✅ Email di-copy!'); } 
+  catch(e) { toast('❌ Gagal copy, salin manual aja.'); }
+  document.body.removeChild(ta);
+}
 
-// FUNGSI CEK INBOX + 3 TOMBOL
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
@@ -262,7 +268,6 @@ function showEmailTerm(msg,type){
   term.classList.add('show'); body.scrollTop=0;
 }
 
-// TAMPILAN KOTAK LINK DENGAN 3 TOMBOL
 function updateAlightBox(j, emailAddress) {
   const box=document.getElementById('alightBox'); const list=document.getElementById('alightList');
   if(!box||!list) return;
@@ -289,7 +294,6 @@ function renderInboxIdx(idx) {
   if(idx >= viewData.length) idx = 0;
   const item = viewData[idx];
   
-  // 3 TOMBOL: Salin (Link API), Buka (Web Asli), Validasi (Otomatis)
   list.innerHTML = `
   <div style="padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);">
     <div style="font-size:.75rem;color:var(--accent);margin-bottom:6px;font-weight:700;">${item.subj || 'No Subject'}</div>
@@ -305,33 +309,23 @@ function renderInboxIdx(idx) {
   </div>`;
 }
 
-// FUNGSI SALIN LINK (Teks aja)
 window.copyLinkTxt = function(url) {
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(url).then(()=>toast('✅ Link berhasil di-copy!')).catch(()=>toast('❌ Gagal copy'));
+    navigator.clipboard.writeText(url).then(()=>toast('✅ Link berhasil di-copy!')).catch(()=>fallbackCopy(url));
   } else {
-    const ta = document.createElement("textarea");
-    ta.value = url; ta.style.position = "fixed"; ta.style.left = "-9999px";
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('✅ Link berhasil di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
-    document.body.removeChild(ta);
+    fallbackCopy(url);
   }
 };
 
-// FUNGSI BUKA DI CHROME (Buka URL API mail untuk liat isi pesan)
 window.bukaDiChrome = function(url) {
   window.open(url, '_blank');
 };
 
-// FUNGSI VALIDASI OTOMATIS (Kirim email & link ke API Noxxy)
 window.validasiOtomatis = async function(urlMail, email) {
-  // Pastiin input keisi
   document.getElementById('emailInput').value = email;
-  document.getElementById('linkInput').value = urlMail; // Link API tempmail ini yg bakal divalidasi
-  
+  document.getElementById('linkInput').value = urlMail;
   go('tool');
   switchTab('verify');
-  
   setTimeout(() => handleVerify(), 500); 
 };
 
