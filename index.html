@@ -23,6 +23,13 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
     <a class="brand" href="#page-home" data-go="home">AM GENERATOR<span>.</span> <span class="brand-name">Egaa</span></a>
     <div class="nav-right">
       <div class="status-pill"><span class="dot"></span><span>ONLINE</span></div>
+      <div class="theme-dock" id="themeDock">
+        <button class="theme-dot on" data-theme="mono"><span class="tip">Mono</span></button>
+        <button class="theme-dot" data-theme="green"><span class="tip">Green</span></button>
+        <button class="theme-dot" data-theme="blue"><span class="tip">Blue</span></button>
+        <button class="theme-dot" data-theme="red"><span class="tip">Red</span></button>
+        <button class="theme-dot" data-theme="violet"><span class="tip">Violet</span></button>
+      </div>
       <div class="nav-avatar"><img id="navAvatar" src="img/avatar-mono.png" alt="AM"></div>
     </div>
   </div>
@@ -107,8 +114,16 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
     <div class="sec" style="padding-top:30px;max-width:700px">
       <div class="sec-head"><p class="kicker">Email Generator</p><h2>Temp Email</h2><p>Generate email sementara untuk testing &amp; verifikasi. By Egaa</p></div>
       <div class="tool-card">
-        <div class="field"><label><i>▸</i>Username (kosongkan = random)</label><input type="text" id="emailUser" placeholder="contoh: yamzz123" autocomplete="off"></div>
-        <button class="btn btn-primary btn-block" id="btnGenEmail" onclick="handleGenEmail()"><span id="btnGenEmailText">Generate Email</span><span class="loader-spin" id="loaderGenEmail"></span></button>
+        
+        <div class="field" style="margin-bottom:16px">
+          <label><i>▸</i>Domain Tersedia (Akunlama)</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+            <span class="badge" style="background:var(--accent);color:#050505;border:none;padding:6px 12px;font-weight:800">@akunlama.com</span>
+          </div>
+        </div>
+
+        <div class="field"><label><i>▸</i>Username (opsional)</label><input type="text" id="emailUser" placeholder="kosongkan = random" autocomplete="off"></div>
+        <button class="btn btn-primary btn-block" id="btnGenEmail" onclick="handleGenEmail()" style="margin-top:16px"><span id="btnGenEmailText">Generate Email</span><span class="loader-spin" id="loaderGenEmail"></span></button>
         
         <div id="emailResult" style="display:none;margin-top:18px">
           <div class="field"><label><i>▸</i>Email Aktif</label>
