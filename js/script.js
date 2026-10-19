@@ -235,8 +235,65 @@ function escHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Decode Quoted-Printable (=3D, =20, soft line break =\n)
 function decodeQP(s){
   return s.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
+// Decode HTML entity (&lt;a href=&quot;...) jadi HTML asli, sampai tidak ada lagi
+function decodeEntities(s){
+  let out = s;
+  for(let i = 0; i < 3 && /&(lt|gt|quot|amp|#39|#x27);/i.test(out); i++){
+    const t = document.createElement('textarea');
+    t.innerHTML = out;
+    out = t.value;
+  }
+  return out;
+}
+
+// Normalisasi escape JSON (\/ \u0026 \u003d) supaya link di dalam JSON tetap terbaca
+function decodeJsonEscapes(s){
+  return s
+    .replace(/\\\//g, '/')
+    .replace(/\\u0026/gi, '&')
+    .replace(/\\u003d/gi, '=')
+    .replace(/\\u003c/gi, '<')
+    .replace(/\\u003e/gi, '>');
+}
+
+// Bersihkan sisa karakter di ujung URL (mis. &quot; atau ")
+function cleanUrl(u){
+  return u
+    .split(/&quot;|&gt;|&lt;|&#39;|"|'|<|>/)[0]
+    .replace(/&amp;/gi, '&')
+    .replace(/[.,;)\]]+$/, '');
+}
+
+// Ambil semua link verifikasi dari teks apa pun (HTML / QP / entity / JSON)
+function extractLinksFromHtml(raw){
+  if(!raw) return [];
+  let src = typeof raw === 'string' ? raw : JSON.stringify(raw);
+  src = decodeJsonEscapes(src);
+  src = decodeEntities(src);
+  if(/=3D|=20|=\r?\n/i.test(src)) src = decodeQP(src);
+  src = decodeEntities(decodeJsonEscapes(src));
+
+  const found = new Set();
+
+  try{
+    const doc = new DOMParser().parseFromString(src, 'text/html');
+    doc.querySelectorAll('a[href]').forEach(a => {
+      const h = a.getAttribute('href');
+      if(h && /^https?:\/\//i.test(h)) found.add(cleanUrl(h));
+    });
+  }catch(e){ console.log('DOMParser gagal', e); }
+
+  (src.match(/https?:\/\/[^\s"'<>\\]+/gi) || []).forEach(u => found.add(cleanUrl(u)));
+
+  const all = [...found].filter(u => u.length > 12 && !/\.(png|jpe?g|gif|css|svg|webp|ico)(\?|$)/i.test(u));
+
+  const verify = all.filter(u => /alight|firebaseapp|auth|verif|oobcode|mode=|magic|token|signin|confirm|activ/i.test(u));
+  return [...new Set(verify.length ? verify : all)].slice(0, 5);
 }
 
 async function handleCheckInbox(){
@@ -249,34 +306,45 @@ async function handleCheckInbox(){
     const messages = data.data || data.messages || (Array.isArray(data) ? data : []);
 
     if(messages && messages.length > 0){
-      toast('Mendownload isi pesan...');
       const fullEmails = [];
       for(const msg of messages){
-        // Coba beberapa nama field untuk ID pesan
-        const storageKey = msg.storageKey || msg.key || msg.id || msg.messageId || msg.message_id || msg._id || msg.uid || msg.hash;
-        // Kalau isi email sudah ada di list, pakai langsung
-        let rawHtml = msg.html || msg.bodyHtml || msg.body_html || msg.content || '';
-        let debug = '';
-        if(storageKey){
+        let html = typeof msg.message === 'string'
+          ? msg.message
+          : (msg.message ? JSON.stringify(msg.message) : '');
+        let note = `message ${html.length}`;
+
+        const st = msg.storage;
+        const key = (typeof st === 'string' ? st : (st && (st.key || st.id || st.storageKey))) || msg.storageKey || msg.key || msg.id || null;
+
+        // 1. Kalau message belum ada link, coba getHtml
+        if(!extractLinksFromHtml(html).length && key){
           try{
-            const detailRes = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${storageKey}`);
-            const fetched = await detailRes.text();
-            if(fetched) rawHtml = fetched;
-            debug = `getHtml status ${detailRes.status}, panjang ${fetched.length}`;
-          }catch(e){
-            debug = `getHtml gagal: ${e.message}`;
-            console.log('Gagal tarik html', e);
-          }
-        } else {
-          debug = 'field di list: ' + Object.keys(msg).join(', ');
+            const r = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${encodeURIComponent(key)}`);
+            const t = await r.text();
+            if(t) html += '\n' + t;
+            note += ` | getHtml ${r.status} (${t.length})`;
+          }catch(e){ note += ' | getHtml gagal'; }
         }
+
+        // 2. Masih kosong? Coba getKey (JSON), sama seperti di scraper akunlama
+        if(!extractLinksFromHtml(html).length && key){
+          try{
+            const r = await fetch(`https://akunlama.com/api/getKey?region=us&key=${encodeURIComponent(key)}`);
+            const t = await r.text();
+            if(t) html += '\n' + t;
+            note += ` | getKey ${r.status} (${t.length})`;
+          }catch(e){ note += ' | getKey gagal'; }
+        }
+
+        if(!key) note += ' | storage kosong';
+
         fullEmails.push({
-          subject: msg.subject || msg.subj || 'Aktivasi Akun',
+          subject: msg.subject || msg.title || 'Aktivasi Akun',
           from: msg.from || 'Alight Creative',
-          date: msg.date || msg.time || new Date().toISOString(),
-          html: rawHtml,
-          text: msg.bodyText || msg.body || msg.preview || '',
-          debug
+          date: msg.timestamp || msg.date || new Date().toISOString(),
+          html,
+          text: msg.preview || '',
+          debug: note
         });
       }
       renderInboxUI(fullEmails);
@@ -296,8 +364,8 @@ function renderInboxUI(emails) {
   list.innerHTML = '';
 
   emails.forEach((m) => {
-    let links = extractLinksFromText(m.html);
-    if (links.length === 0) links = extractLinksFromText(m.text);
+    const links = extractLinksFromHtml(m.html);
+    if (links.length === 0 && m.text) links.push(...extractLinksFromHtml(m.text));
     const timeStr = m.date ? new Date(m.date).toLocaleTimeString() : '-';
 
     let card = `
@@ -366,26 +434,6 @@ function copyText(text){
   if(navigator.clipboard && window.isSecureContext){
     navigator.clipboard.writeText(text).then(()=>toast('✅ Link berhasil di-copy!')).catch(()=>fallbackCopy(text));
   } else { fallbackCopy(text); }
-}
-
-// Ambil link dari HTML (href asli) dan teks. Prioritaskan link verifikasi.
-function extractLinksFromText(text) {
-  if(!text) return [];
-  let src = /=3D|=20|=\r?\n/i.test(text) ? decodeQP(text) : text;
-  src = src.replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;/g, "'");
-
-  const found = new Set();
-  const hrefRe = /href\s*=\s*["']?\s*(https?:\/\/[^"'\s<>]+)/gi;
-  let m;
-  while((m = hrefRe.exec(src))) found.add(m[1]);
-  (src.match(/https?:\/\/[^\s"'<>\\]+/gi) || []).forEach(u => found.add(u));
-
-  const all = [...found]
-    .map(u => u.replace(/[.,;)]+$/, ''))
-    .filter(u => !/\.(png|jpe?g|gif|css|svg|webp|ico)(\?|$)/i.test(u));
-
-  const verify = all.filter(u => /alight|firebaseapp|auth|verif|oobcode|mode=|magic|token|signin|confirm|activ/i.test(u));
-  return [...new Set(verify.length ? verify : all)].slice(0, 5);
 }
 
 window.validasiOtomatis = async function(link, email) {
