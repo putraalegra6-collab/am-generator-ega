@@ -1,5 +1,5 @@
 const API_BASE = '/api';
-const ACCESS_KEY = 'Egaa'; // ✅ AMAN
+const ACCESS_KEY = 'Egaa'; 
 const isReturn = document.documentElement.getAttribute('data-return')==='1';
 
 function go(name){
@@ -16,7 +16,7 @@ document.querySelectorAll('[data-go]').forEach(el=>{
 });
 if(location.hash) go(location.hash.replace('#page-',''));
 
-// LOADING BARU
+// LOADING
 const loader = document.getElementById('loader');
 if(loader){
   if(!isReturn){
@@ -32,7 +32,7 @@ if(loader){
   }
 }
 
-// PARTIKEL BACKGROUND
+// PARTIKEL
 (function(){
   const cv=document.getElementById('fx'); if(!cv) return;
   const ctx=cv.getContext('2d');let w,h,pts=[],color='rgba(255,255,255,.55)';
@@ -41,26 +41,12 @@ if(loader){
   resize();addEventListener('resize',resize,{passive:true});
   const N=innerWidth<600?14:22;
   for(let i=0;i<N;i++)pts.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.6+0.5,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22});
-  try{color=getComputedStyle(document.documentElement).getPropertyValue('--particle').trim()||color;}catch(e){}
   let running=true, typing=false, rafId=null, last=0;
   document.addEventListener('focusin',e=>{if(e.target && (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))typing=true;});
   document.addEventListener('focusout',e=>{if(e.target && (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))typing=false;});
   function tick(ts){ rafId=requestAnimationFrame(tick); if(!running || typing) return; if(ts-last<33) return; last=ts; ctx.clearRect(0,0,innerWidth,innerHeight); for(let i=0;i<pts.length;i++){ const p=pts[i]; p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>innerWidth)p.vx*=-1; if(p.y<0||p.y>innerHeight)p.vy*=-1; ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fillStyle=color;ctx.fill(); } }
   rafId=requestAnimationFrame(tick);
 })();
-
-// THEME GANTI WARNA
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme',theme);
-  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.toggle('on',d.dataset.theme===theme));
-  const themeImg='img/avatar-'+theme+'.png';
-  const av=document.getElementById('creatorAvatar'); if(av) av.src=themeImg;
-  const navAv=document.getElementById('navAvatar'); if(navAv) navAv.src=themeImg;
-  const loadAv=document.getElementById('loaderAvatar'); if(loadAv) loadAv.src=themeImg;
-  try{localStorage.setItem('amTheme',theme);}catch(e){}
-}
-document.querySelectorAll('.theme-dot').forEach(dot=>{ dot.addEventListener('click',()=>applyTheme(dot.dataset.theme)); });
-try{applyTheme(document.documentElement.getAttribute('data-theme')||'mono');}catch(e){}
 
 window.addEventListener('load',()=>{ document.querySelectorAll('.reveal').forEach(el=>{ if(!isReturn){ setTimeout(()=>el.classList.add('in'),(el.style.getPropertyValue('--d').replace('s','')||0)*1000); }else{ el.classList.add('in'); } }); });
 
@@ -86,7 +72,7 @@ function showTerm(msg,type){
 }
 function hideTerm(){const term=document.getElementById('term');if(term)term.classList.remove('show');}
 
-// MODAL KEY
+// ACCESS KEY
 const keyModal=document.getElementById('keyModal');
 const keyHint=document.getElementById('keyHint');
 const keyErrorTop=document.getElementById('keyErrorTop');
@@ -126,7 +112,7 @@ function switchTab(tab){
   hideTerm();
 }
 
-// API AM (NOXXY)
+// API AM
 const emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function handleSend(){
@@ -187,63 +173,50 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (AKUNLAMA API)
+// TEMP MAIL (TEMPMail.PLUS API - Fix 3 Tombol)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
 
 async function handleGenEmail(){
   const user = document.getElementById('emailUser')?.value?.trim();
+  const domain = document.getElementById('emailDomain')?.value || 'mailto.plus';
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   showEmailTerm('Membuat email sementara...','');
   
-  try{
-    let finalUser = user;
-    if(!finalUser){
-      const frontName = ["haru","yuki","sora","nana","mika","iroha","akari","hina","yuna","rin"];
-      const endName = ["chan","san","kun","nya","nyaa","neko","mimi","koko","yume","sora"];
-      finalUser = `${frontName[Math.floor(Math.random()*frontName.length)]}_${endName[Math.floor(Math.random()*endName.length)]}${Math.floor(Math.random()*99)}`;
-    }
-    
-    const url = `https://akunlama.com/api/list?recipient=${finalUser}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    
-    currentEmail = finalUser + "@akunlama.com";
+  // Bikin random string kalau user kosong
+  let finalUser = user;
+  if(!finalUser){
+    const chars = 'abcdefghijklmnopqrstuvwxyz1234567890';
+    finalUser = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  }
+  
+  currentEmail = `${finalUser}@${domain}`;
+  
+  setTimeout(() => {
     document.getElementById('emailOutput').value = currentEmail;
-    document.getElementById('emailResult').style.display='block';
-    
-    toast(`Email dibuat!`);
-    showEmailTerm(JSON.stringify({status:"success", email: currentEmail, note:"Cek inbox secara berkala."}, null, 2),'success');
-    
-    const ei2=document.getElementById('emailInput');
-    if(ei2) ei2.value=currentEmail;
-    
-  }catch(e){
-    toast('Gagal buat email: ' + e.message);
-    showEmailTerm(JSON.stringify({status:"error", msg:e.message},null,2),'error');
-  }finally{ setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false); }
+    document.getElementById('emailResult').style.display = 'block';
+    showEmailTerm(JSON.stringify({status:"success", email: currentEmail, note:"Email berhasil dibuat. Klik Cek Inbox untuk memantau."}, null, 2),'success');
+    toast('Email berhasil dibuat!');
+    setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',false);
+  }, 800); 
 }
 
-// FIX TOMBOL COPY (Biar support semua browser/WebView HP)
 function copyEmail(){
   const v=document.getElementById('emailOutput')?.value;
   if(!v) return;
-  
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(v).then(()=>toast('✅ Email di-copy!')).catch(()=>toast('❌ Gagal copy'));
   } else {
     const ta = document.createElement("textarea");
-    ta.value = v;
-    ta.style.position = "fixed"; ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); toast('✅ Email di-copy!'); } 
-    catch(e) { toast('❌ Gagal copy'); }
+    ta.value = v; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('✅ Email di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
     document.body.removeChild(ta);
   }
 }
 
+// FUNGSI CEK INBOX + 3 TOMBOL
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
@@ -251,24 +224,26 @@ async function handleCheckInbox(){
   document.getElementById('alightBox').style.display='none';
   
   try{
-    const username = currentEmail.split('@')[0];
-    const res = await fetch(`https://akunlama.com/api/list?recipient=${username}`);
+    const res = await fetch(`https://tempmail.plus/api/mails?email=${currentEmail}&limit=20`);
     const data = await res.json();
     
-    if(data.messages && data.messages.length > 0){
-      toast(`Ada ${data.messages.length} pesan!`);
+    if(data.result === false) throw new Error("Inbox belum siap / tidak ditemukan.");
+    
+    const mails = data.mail_list || [];
+    
+    if(mails.length > 0){
+      toast(`Ada ${mails.length} pesan!`);
       
-      const formattedMails = data.messages.map(m => ({
+      const formattedMails = mails.map(m => ({
         subj: m.subject,
-        from: m.from,
-        time: m.date,
-        id: m.id,
-        bodyText: m.body
+        from: m.from_mail,
+        time: new Date(m.time).toLocaleTimeString(),
+        mail_id: m.mail_id
       }));
       
-      const formattedData = { result: { success: true, numMess: data.messages.length, mails: formattedMails } };
+      const formattedData = { result: { success: true, numMess: mails.length, mails: formattedMails } };
       showEmailTerm(JSON.stringify(formattedData, null, 2),'success');
-      updateAlightBox(formattedData);
+      updateAlightBox(formattedData, currentEmail);
     }else{
       toast('Inbox kosong.');
       showEmailTerm(JSON.stringify({status:"warning", msg:"Belum ada pesan masuk. Tunggu 10-30 detik."},null,2),'warning');
@@ -287,13 +262,14 @@ function showEmailTerm(msg,type){
   term.classList.add('show'); body.scrollTop=0;
 }
 
-function updateAlightBox(j) {
+// TAMPILAN KOTAK LINK DENGAN 3 TOMBOL
+function updateAlightBox(j, emailAddress) {
   const box=document.getElementById('alightBox'); const list=document.getElementById('alightList');
   if(!box||!list) return;
   
   let mails = j?.result?.mails || [];
-  let linksData = mails.map((m, i) => ({ 
-    link: m.bodyText || "Tidak ada link", 
+  let linksData = mails.map((m) => ({ 
+    urlMail: `https://tempmail.plus/api/mails/${m.mail_id}?email=${emailAddress}&epin=`,
     subj: m.subj, 
     time: m.time 
   }));
@@ -313,21 +289,50 @@ function renderInboxIdx(idx) {
   if(idx >= viewData.length) idx = 0;
   const item = viewData[idx];
   
-  list.innerHTML = `<div style="padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.28)">
-    <div style="font-size:.68rem;color:var(--accent);margin-bottom:5px">${item.subj || 'No Subject'}</div>
-    <code style="display:block;padding:10px;background:rgba(0,0,0,.38);border:1px solid var(--line);border-radius:8px;font-size:.64rem;color:var(--accent-2);word-break:break-all;margin-bottom:10px">${item.link}</code>
-    <button onclick="verifyAlightLinkIdx(${idx})" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#050505;font-weight:800;cursor:pointer">⚡ Validasi Otomatis</button>
+  // 3 TOMBOL: Salin (Link API), Buka (Web Asli), Validasi (Otomatis)
+  list.innerHTML = `
+  <div style="padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);">
+    <div style="font-size:.75rem;color:var(--accent);margin-bottom:6px;font-weight:700;">${item.subj || 'No Subject'}</div>
+    <div style="font-size:.65rem;color:var(--muted);margin-bottom:12px;">${item.time}</div>
+    
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="copyLinkTxt('${item.urlMail}')" style="flex:1 1 100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">📋 Salin Link</button>
+      
+      <button onclick="bukaDiChrome('${item.urlMail}')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--accent);background:rgba(255,255,255,.1);color:var(--fg);font-weight:700;font-size:.8rem;cursor:pointer;transition:0.3s;">🌐 Buka</button>
+      
+      <button onclick="validasiOtomatis('${item.urlMail}', '${currentEmail}')" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--accent);color:#050505;font-weight:800;font-size:.8rem;cursor:pointer;transition:0.3s;">⚡ Validasi</button>
+    </div>
   </div>`;
 }
 
-window.verifyAlightLinkIdx = async function(idx) {
-  const item = (window._viewData || [])[idx];
-  if(!item) return;
-  document.getElementById('emailInput').value = currentEmail;
-  document.getElementById('linkInput').value = item.link;
+// FUNGSI SALIN LINK (Teks aja)
+window.copyLinkTxt = function(url) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(()=>toast('✅ Link berhasil di-copy!')).catch(()=>toast('❌ Gagal copy'));
+  } else {
+    const ta = document.createElement("textarea");
+    ta.value = url; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('✅ Link berhasil di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
+    document.body.removeChild(ta);
+  }
+};
+
+// FUNGSI BUKA DI CHROME (Buka URL API mail untuk liat isi pesan)
+window.bukaDiChrome = function(url) {
+  window.open(url, '_blank');
+};
+
+// FUNGSI VALIDASI OTOMATIS (Kirim email & link ke API Noxxy)
+window.validasiOtomatis = async function(urlMail, email) {
+  // Pastiin input keisi
+  document.getElementById('emailInput').value = email;
+  document.getElementById('linkInput').value = urlMail; // Link API tempmail ini yg bakal divalidasi
+  
   go('tool');
   switchTab('verify');
-  setTimeout(() => handleVerify(), 500);
+  
+  setTimeout(() => handleVerify(), 500); 
 };
 
 window.startAutoCheck=function(){
