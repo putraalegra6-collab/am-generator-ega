@@ -252,18 +252,23 @@ async function handleCheckInbox(){
       toast('Mendownload isi pesan...');
       const fullEmails = [];
       for(const msg of messages){
-        const storageKey = msg.storageKey || msg.key || msg.id;
-        let rawHtml = '';
-        let debug = 'tanpa storageKey';
+        // Coba beberapa nama field untuk ID pesan
+        const storageKey = msg.storageKey || msg.key || msg.id || msg.messageId || msg.message_id || msg._id || msg.uid || msg.hash;
+        // Kalau isi email sudah ada di list, pakai langsung
+        let rawHtml = msg.html || msg.bodyHtml || msg.body_html || msg.content || '';
+        let debug = '';
         if(storageKey){
           try{
             const detailRes = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${storageKey}`);
-            rawHtml = await detailRes.text();
-            debug = `getHtml status ${detailRes.status}, panjang ${rawHtml.length}`;
+            const fetched = await detailRes.text();
+            if(fetched) rawHtml = fetched;
+            debug = `getHtml status ${detailRes.status}, panjang ${fetched.length}`;
           }catch(e){
             debug = `getHtml gagal: ${e.message}`;
             console.log('Gagal tarik html', e);
           }
+        } else {
+          debug = 'field di list: ' + Object.keys(msg).join(', ');
         }
         fullEmails.push({
           subject: msg.subject || msg.subj || 'Aktivasi Akun',
@@ -332,7 +337,7 @@ function renderInboxUI(emails) {
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line);">
         <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Link tidak ditemukan. Coba klik Cek Inbox lagi.</div>
-        <div style="font-size:.6rem; color:var(--accent-2); font-family:monospace; margin-bottom:8px;">DEBUG: ${escHtml(m.debug || '-')}</div>
+        <div style="font-size:.6rem; color:var(--accent-2); font-family:monospace; margin-bottom:8px; word-break:break-all;">DEBUG: ${escHtml(m.debug || '-')}</div>
         <button data-act="refresh" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🔄 Refresh Cek Inbox</button>
       </div>`;
     }
