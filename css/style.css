@@ -197,9 +197,7 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 .info-item li{font-size:.86rem;color:var(--muted);display:flex;gap:8px}
 .info-item li::before{content:"OK";color:var(--ok);font-weight:800;font-size:.7rem;letter-spacing:.05em}
 
-/* =========================================
-   CREATOR CARD (ANIMASI GERAK SMOOTH)
-   ========================================= */
+/* CREATOR CARD (ANIMASI GERAK SMOOTH) */
 .creator-card {
   max-width: 420px;
   margin: 0 auto;
