@@ -197,7 +197,7 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 .info-item li{font-size:.86rem;color:var(--muted);display:flex;gap:8px}
 .info-item li::before{content:"OK";color:var(--ok);font-weight:800;font-size:.7rem;letter-spacing:.05em}
 
-/* CREATOR CARD (SUPER KEREN) */
+/* CREATOR CARD (BERSIH TANPA NOMOR) */
 .creator-card{
   max-width:400px;margin:0 auto;
   background:linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(5,5,5,1) 100%);
@@ -253,79 +253,23 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
 .reveal.in{opacity:1;transform:none}
 
-/* =========================================
-   PREMIUM MODAL SUKSES (DIPERBAGUS & GOLD)
-   ========================================= */
+/* PREMIUM MODAL SUKSES */
 .premium-modal {position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s ease;padding:20px;}
 .premium-modal.show {opacity:1;pointer-events:auto;}
-
-.premium-card {
-  background:linear-gradient(180deg, #111 0%, #050505 100%);
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:28px; width:100%; max-width:380px;
-  padding:40px 24px; text-align:center; position:relative;
-  box-shadow: 0 30px 80px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.2);
-  transform:translateY(30px) scale(.9); transition:all .5s var(--ease);
-  overflow:hidden;
-}
+.premium-card {background:linear-gradient(180deg, #111 0%, #050505 100%);border:1px solid rgba(255,255,255,.15);border-radius:28px; width:100%; max-width:380px;padding:40px 24px; text-align:center; position:relative;box-shadow: 0 30px 80px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.2);transform:translateY(30px) scale(.9); transition:all .5s var(--ease);overflow:hidden;}
 .premium-modal.show .premium-card {transform:translateY(0) scale(1);}
-
-.premium-glow {
-  position:absolute; top:-50%; left:50%; transform:translateX(-50%);
-  width:200%; height:200%; 
-  background:radial-gradient(circle, rgba(251,191,36,.15) 0%, transparent 60%);
-  pointer-events:none; z-index:0;
-  animation:premiumPulse 3s infinite alternate;
-}
+.premium-glow {position:absolute; top:-50%; left:50%; transform:translateX(-50%);width:200%; height:200%; background:radial-gradient(circle, rgba(251,191,36,.15) 0%, transparent 60%);pointer-events:none; z-index:0;animation:premiumPulse 3s infinite alternate;}
 @keyframes premiumPulse {0%{opacity:0.5;}100%{opacity:1;}}
-
-.premium-icon {
-  width:80px; height:80px; margin:0 auto 20px;
-  border-radius:50%; background:rgba(74,222,128,.1);
-  border:2px solid #4ade80; color:#4ade80;
-  display:flex; align-items:center; justify-content:center;
-  font-size:2.5rem; font-weight:bold; position:relative; z-index:1;
-  box-shadow:0 0 30px rgba(74,222,128,.4);
-  animation:premiumScaleIn .6s var(--ease) both;
-}
+.premium-icon {width:80px; height:80px; margin:0 auto 20px;border-radius:50%; background:rgba(74,222,128,.1);border:2px solid #4ade80; color:#4ade80;display:flex; align-items:center; justify-content:center;font-size:2.5rem; font-weight:bold; position:relative; z-index:1;box-shadow:0 0 30px rgba(74,222,128,.4);animation:premiumScaleIn .6s var(--ease) both;}
 @keyframes premiumScaleIn {0%{transform:scale(0);}100%{transform:scale(1);}}
-
-.premium-badge {
-  display:inline-block;
-  background:linear-gradient(90deg, #fbbf24, #f59e0b);
-  color:#000; font-size:.75rem; font-weight:900;
-  padding:8px 18px; border-radius:30px; margin-bottom:16px;
-  letter-spacing:1.5px; text-transform:uppercase;
-  position:relative; z-index:1;
-  box-shadow: 0 4px 15px rgba(251,191,36,.4);
-}
-
+.premium-badge {display:inline-block;background:linear-gradient(90deg, #fbbf24, #f59e0b);color:#000; font-size:.75rem; font-weight:900;padding:8px 18px; border-radius:30px; margin-bottom:16px;letter-spacing:1.5px; text-transform:uppercase;position:relative; z-index:1;box-shadow: 0 4px 15px rgba(251,191,36,.4);}
 .premium-card h2 {font-size:1.6rem; margin-bottom:8px; color:#fff; font-weight:800; position:relative; z-index:1;}
 .premium-card p {font-size:.85rem; color:#9b9b9b; margin-bottom:28px; position:relative; z-index:1;}
-
-.premium-details {
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px; padding:20px; margin-bottom:28px;
-  position:relative; z-index:1; text-align:left;
-  box-shadow: inset 0 2px 10px rgba(0,0,0,.5);
-}
-
-.p-row {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:12px 0; border-bottom:1px dashed rgba(255,255,255,.1);
-  font-size:.85rem;
-}
+.premium-details {background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px; padding:20px; margin-bottom:28px;position:relative; z-index:1; text-align:left;box-shadow: inset 0 2px 10px rgba(0,0,0,.5);}
+.p-row {display:flex; justify-content:space-between; align-items:center;padding:12px 0; border-bottom:1px dashed rgba(255,255,255,.1);font-size:.85rem;}
 .p-row:last-child {border-bottom:none;}
 .p-row span {color:#9b9b9b; font-weight:600;}
-
-.p-row b {
-  color:#fbbf24;
-  font-weight:800;
-  font-family:"Segoe UI", sans-serif;
-  text-shadow: 0 0 10px rgba(251,191,36,.3);
-  letter-spacing: 0.5px;
-}
+.p-row b {color:#fbbf24; font-weight:800; font-family:"Segoe UI", sans-serif; text-shadow: 0 0 10px rgba(251,191,36,.3); letter-spacing: 0.5px;}
 
 @media (max-width:700px){
   .grid-3, .info-grid {grid-template-columns:1fr}
