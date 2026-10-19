@@ -167,7 +167,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (AKUNLAMA.COM API) - SESUAI REQUEST
+// TEMP MAIL (AKUNLAMA.COM API) - FIX FULL
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -177,23 +177,23 @@ async function handleGenEmail(){
   setLoading('btnGenEmail','loaderGenEmail','btnGenEmailText',true);
   
   try{
-    // Bikin username (kalo kosong pake random)
+    // Generate random username kalo kosong
     let finalUser = user;
     if(!finalUser){
-      const chars = 'abcdefghijklmnopqrstuvwxyz1234567890';
-      finalUser = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      finalUser = Math.random().toString(36).substring(2, 10);
     }
     
-    // Panggil API akunlama (sesuai script yang lu kasih)
     const res = await fetch(`https://akunlama.com/api/list?recipient=${finalUser}`);
-    if(!res.ok) throw new Error("Gagal konek ke akunlama.");
+    if(!res.ok) throw new Error("Gagal konek ke server.");
     
-    // API akunlama langsung ngasih balik data inbox (walau kosong)
-    // Jadi kita set aja emailnya
     currentEmail = `${finalUser}@akunlama.com`;
     document.getElementById('emailOutput').value = currentEmail;
     document.getElementById('emailResult').style.display = 'block';
     
+    // Sembunyiin dropdown domain biar sesuai request lu (cuma akunlama.com)
+    const domEl = document.getElementById('emailDomain');
+    if(domEl) domEl.style.display = 'none';
+
     toast(`Email dibuat!`);
     const ei2=document.getElementById('emailInput');
     if(ei2) ei2.value=currentEmail;
@@ -232,7 +232,7 @@ function openAlightApp(url) {
   }
 }
 
-// CEK INBOX (AKUNLAMA)
+// CEK INBOX (AKUNLAMA) - FIX LINK HTML
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
@@ -241,11 +241,9 @@ async function handleCheckInbox(){
   
   try{
     const username = currentEmail.split('@')[0];
-    // Tarik list inbox dari akunlama
     const res = await fetch(`https://akunlama.com/api/list?recipient=${username}`);
     const data = await res.json();
     
-    // API akunlama balikin array 'data' atau 'messages' (tergantung respon)
     let messages = data.messages || data.data || (Array.isArray(data) ? data : []);
 
     if(messages && messages.length > 0){
@@ -254,16 +252,16 @@ async function handleCheckInbox(){
       
       for(let i=0; i < messages.length; i++){
         let msg = messages[i];
-        let storageKey = msg.storageKey || msg.id; // Key buat ambil detail
+        let storageKey = msg.storageKey || msg.id; // Ini kunci buat ambil HTML asli
         
         let htmlBody = "";
         
-        // Kalau ada storageKey, kita tarik HTML aslinya (buat dapet link)
+        // Ambil HTML Asli dari akunlama (biar dapet linknya)
         if(storageKey){
           try {
             const detailRes = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${storageKey}`);
-            htmlBody = await detailRes.text();
-          } catch(e) {}
+            htmlBody = await detailRes.text(); // Ini bakal dapet HTML mentah yang isinya link
+          } catch(e) { console.log("Gagal tarik html", e); }
         }
         
         fullEmails.push({
