@@ -197,33 +197,32 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 .info-item li{font-size:.86rem;color:var(--muted);display:flex;gap:8px}
 .info-item li::before{content:"OK";color:var(--ok);font-weight:800;font-size:.7rem;letter-spacing:.05em}
 
-/* CREATOR CARD (DIPERBAGUS) */
+/* CREATOR CARD (SUPER KEREN) */
 .creator-card{
-  max-width:500px;margin:0 auto;
-  background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.01) 100%);
-  border:1px solid var(--line);border-radius:24px;
+  max-width:400px;margin:0 auto;
+  background:linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(5,5,5,1) 100%);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:28px;
   padding:40px 30px;text-align:center;
-  backdrop-filter:blur(20px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,.15);
   position: relative; overflow: hidden;
 }
 .creator-card::before{
   content:''; position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
-  width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,.05) 0%, transparent 60%);
+  width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,.08) 0%, transparent 60%);
   pointer-events: none;
 }
 .creator-card .av{
-  width:110px;height:110px;border-radius:50%;margin:0 auto 20px;overflow:hidden;
+  width:100px;height:100px;border-radius:50%;margin:0 auto 24px;overflow:hidden;
   display:grid;place-items:center;background:var(--bg-1);
-  border:2px solid rgba(255,255,255,.3);
-  box-shadow:0 0 0 6px rgba(255,255,255,.05), 0 0 30px rgba(255,255,255,.15);
+  border:2px solid rgba(255,255,255,.2);
+  box-shadow:0 0 0 6px rgba(255,255,255,.03), 0 0 30px rgba(255,255,255,.1);
   position: relative; z-index: 1;
 }
 .creator-card .av img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s var(--ease)}
 .creator-card:hover .av img{transform:scale(1.08)}
-.creator-card h3{font-size:1.6rem;font-weight:800;margin-bottom:6px; position: relative; z-index: 1;}
-.creator-card .role{color:var(--accent);font-weight:700;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px; position: relative; z-index: 1;}
-.creator-card .phone{color:var(--fg);font-size:1.05rem;margin:24px 0 0;font-family:"Cascadia Code",Consolas,monospace;letter-spacing:.05em; font-weight:700; position: relative; z-index: 1;}
+.creator-card h3{font-size:1.6rem;font-weight:800;margin-bottom:6px; position: relative; z-index: 1; letter-spacing:1px;}
+.creator-card .role{color:var(--muted);font-weight:700;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:24px; position: relative; z-index: 1;}
 
 /* FOOTER & NAV BAWAH */
 .footer{position:relative;z-index:2;text-align:center;padding:34px 22px 40px;color:var(--muted);font-size:.8rem}
@@ -271,7 +270,6 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 }
 .premium-modal.show .premium-card {transform:translateY(0) scale(1);}
 
-/* Glow Effect */
 .premium-glow {
   position:absolute; top:-50%; left:50%; transform:translateX(-50%);
   width:200%; height:200%; 
@@ -321,9 +319,8 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 .p-row:last-child {border-bottom:none;}
 .p-row span {color:#9b9b9b; font-weight:600;}
 
-/* Text Plan Premium */
 .p-row b {
-  color:#fbbf24; /* Warna Emas */
+  color:#fbbf24;
   font-weight:800;
   font-family:"Segoe UI", sans-serif;
   text-shadow: 0 0 10px rgba(251,191,36,.3);
