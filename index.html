@@ -7,9 +7,7 @@
 <title>AM Generator — Premium Activation</title>
 <link rel="stylesheet" href="css/style.css">
 <script>
-
 try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttribute('data-return','1'); } else { sessionStorage.setItem('amVisited','1'); } }catch(e){}
-
 try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAttribute('data-theme',t); }catch(e){}
 </script>
 </head>
@@ -65,7 +63,6 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
     </div>
   </section>
 
-  
   <section class="page" id="page-cara">
     <div class="sec" style="padding-top:40px">
       <div class="sec-head"><p class="kicker">Cara Kerja</p><h2>Ikuti 3 Langkah Mudah</h2><p>Aktivasi premium hanya butuh tiga langkah sederhana.</p></div>
@@ -78,7 +75,6 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
     </div>
   </section>
 
-  
   <section class="page" id="page-tool">
     <div class="sec" style="padding-top:30px;max-width:700px">
       <div class="sec-head"><p class="kicker">Tool</p><h2>Generator Premium</h2><p>Kirim link aktivasi dan validasi link Anda.</p></div>
@@ -96,7 +92,7 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
           <div class="tut">
             <div class="tut-head"><i>▸</i>Tutorial cari link verifikasi</div>
             <ol class="tut-list">
-              <li><span class="tut-num">1</span>Buka <b>Gmail</b></li>
+              <li><span class="tut-num">1</span>Buka <b>Gmail / TempMail</b></li>
               <li><span class="tut-num">2</span>Buka <b>Spam</b></li>
               <li><span class="tut-num">3</span>Pencet paling atas</li>
               <li><span class="tut-num">4</span>Pencet lama tulisan <b>"Sign in to Alight Creative"</b> sampai muncul <b>"salin"</b></li>
@@ -114,54 +110,40 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
     </div>
   </section>
 
-  
   <section class="page" id="page-email">
     <div class="sec" style="padding-top:30px;max-width:700px">
       <div class="sec-head"><p class="kicker">Email Generator</p><h2>Temp Email</h2><p>Generate email sementara untuk testing &amp; verifikasi. By Egaa</p></div>
       <div class="tool-card">
-        <div class="field"><label><i>▸</i>Domain (temp email)</label>
-          <select id="emailDomain" style="width:100%;padding:14px 16px;background:var(--input);border:1px solid var(--line);border-radius:12px;color:var(--fg);font-size:.9rem;outline:none">
-            <option value="">Memuat domain...</option>
-          </select>
-          <p style="font-size:.68rem;color:var(--muted);margin-top:6px">Domain temp dari generator.email. <b>gmail.com tidak ada</b> karena itu bukan temp email.</p>
-        </div>
-        <div class="field"><label><i>▸</i>Domain custom (opsional)</label><input type="text" id="emailDomainCustom" placeholder="kosongkan pakai domain temp, atau ketik gmail.com untuk xxxx@gmail.com" autocomplete="off"></div>
-        <div class="field"><label><i>▸</i>Username (kosongkan = random)</label><input type="text" id="emailUser" placeholder="contoh: yamzz123" autocomplete="off"></div>
+        <div class="field"><label><i>▸</i>Username (opsional)</label><input type="text" id="emailUser" placeholder="kosongkan = random" autocomplete="off"></div>
         <button class="btn btn-primary btn-block" id="btnGenEmail" onclick="handleGenEmail()"><span id="btnGenEmailText">Generate Email</span><span class="loader-spin" id="loaderGenEmail"></span></button>
-        <div id="emailResult" style="display:none;margin-top:6px">
+        
+        <div id="emailResult" style="display:none;margin-top:18px">
           <div class="field"><label><i>▸</i>Email Aktif</label>
             <div style="display:flex;gap:8px">
               <input type="text" id="emailOutput" readonly style="flex:1">
               <button class="btn btn-ghost" style="padding:12px 16px;white-space:nowrap" onclick="copyEmail()">Copy</button>
             </div>
           </div>
-          <button class="btn btn-ghost btn-block" id="btnCheckInbox" onclick="handleCheckInbox()" style="margin-top:12px"><span id="btnCheckInboxText">Cek Inbox (1)</span><span class="loader-spin" id="loaderCheckInbox"></span></button>
+          <button class="btn btn-ghost btn-block" id="btnCheckInbox" onclick="handleCheckInbox()" style="margin-top:12px"><span id="btnCheckInboxText">Cek Inbox</span><span class="loader-spin" id="loaderCheckInbox"></span></button>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="btn btn-ghost" style="flex:1;font-size:.8rem" onclick="startAutoCheck()">Auto: ON/OFF</button>
             <span id="autoStatus" style="font-size:.72rem;color:var(--muted);align-self:center">idle</span>
           </div>
         </div>
+
         <div class="term" id="emailTerm" style="margin-top:18px">
           <div class="term-bar"><span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span><span class="tt">INBOX LOG</span></div>
           <div class="term-body" id="emailTermBody"></div>
         </div>
-        <!-- kolom penting link alight -->
+
         <div id="alightBox" style="display:none;margin-top:14px;padding:18px;border:1px solid var(--accent);border-radius:16px;background:linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,.02));backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.35)">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
             <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);flex:0 0 auto"></span>
             <span style="font-size:.70rem;letter-spacing:.20em;font-weight:800;color:var(--accent)">LINK ALIGHT TERDETEKSI</span>
             <span id="alightCount" style="margin-left:auto;font-size:.60rem;letter-spacing:.10em;font-weight:700;color:var(--fg);background:var(--accent);padding:4px 10px;border-radius:99px">0</span>
           </div>
-          <div id="inboxNav" style="display:none;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">
-            <button onclick="prevInbox()" style="flex:0 0 86px;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg);font-weight:800;font-size:.78rem;cursor:pointer">‹ KIRI</button>
-            <span id="inboxNavCounter" style="flex:1;text-align:center;font-size:.72rem;font-weight:800;letter-spacing:.08em;color:var(--accent)">1 / 1</span>
-            <button onclick="nextInbox()" style="flex:0 0 86px;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg);font-weight:800;font-size:.78rem;cursor:pointer">KANAN ›</button>
-          </div>
           <div id="alightList" style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow:auto;padding-right:4px"></div>
-          <code id="alightLink" style="display:none"></code>
-          <p style="font-size:.66rem;color:var(--muted);margin-top:10px;text-align:center;letter-spacing:.02em">Setiap email berisi link acak • bisa lihat sampai 20 inbox terbaru</p>
         </div>
-        <p style="font-size:.72rem;color:var(--muted);margin-top:12px;text-align:center">Creator: Egaa • API: generator.email</p>
       </div>
     </div>
   </section>
@@ -174,11 +156,9 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
         <div class="info-item"><h3><span class="di">▸</span>Keuntungan</h3><ul><li>Proses cepat dan otomatis</li><li>Aman dan terverifikasi</li><li>Gratis tanpa ribet</li><li>Bisa diulang kapan saja</li></ul></div>
         <div class="info-item"><h3><span class="di">▸</span>Catatan</h3><p>Gunakan email aktif. Link kadang masuk ke folder Spam. Jika link tidak ditemukan, coba kirim ulang email target.</p></div>
       </div>
-      <div class="info-item" style="margin-top:18px"><h3><span class="di">▸</span>Kenapa akun belum premium?</h3><p style="font-size:.86rem;color:var(--muted)">Akun baru masuk tapi belum premium itu <b>normal</b> kalau kamu belum <b>validasi link</b>. Alurnya: 1) Generate temp email di menu <b>Email</b>, 2) Pakai email itu di Tool → <b>Kirim Link</b>, 3) Cek Inbox di menu Email → tunggu 10-30 detik → klik <b>⚡ Validasi Otomatis</b> atau salin link <code>alightcreative.com / firebaseapp.com</code> ke menu Tool → <b>Validasi Sekarang</b> (tanpa captcha), 4) Baru buka Alight Motion dan login pakai email yang sama → premium aktif. Jika masih belum, coba: link hanya sekali pakai &amp; expired 5-10 menit → generate email baru &amp; kirim ulang, pastikan validasi di Tool menunjukkan <code>success</code>, cek koneksi backend <code>am.kyzzz.xyz</code>.</p></div>
     </div>
   </section>
 
-  
   <section class="page" id="page-creator">
     <div class="sec" style="padding-top:40px">
       <div class="sec-head"><p class="kicker">Creator</p><h2>AM Creator</h2></div>
@@ -216,6 +196,25 @@ try{ var t=localStorage.getItem('amTheme'); if(t) document.documentElement.setAt
   </div>
 </nav>
 
+<!-- MODAL PREMIUM SUKSES -->
+<div class="premium-modal" id="premiumModal">
+  <div class="premium-card">
+    <div class="premium-glow"></div>
+    <div class="premium-icon">✓</div>
+    <div class="premium-badge">💎 PREMIUM AKTIF</div>
+    <h2>Aktivasi Berhasil!</h2>
+    <p>Akun Alight Motion kamu sudah premium.</p>
+    
+    <div class="premium-details">
+      <div class="p-row"><span>Email</span><b id="pmEmail">-</b></div>
+      <div class="p-row"><span>UID</span><b id="pmUid">-</b></div>
+      <div class="p-row"><span>Plan</span><b id="pmPlan">PRO / MEMBER</b></div>
+      <div class="p-row"><span>Berlaku</span><b id="pmDate">-</b></div>
+    </div>
+    
+    <button class="btn btn-primary btn-block" onclick="closePremiumModal()">Selesai</button>
+  </div>
+</div>
 
 <div class="modal" id="keyModal">
   <div class="modal-card">
