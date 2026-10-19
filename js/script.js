@@ -215,122 +215,109 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
 }
 
-// FUNGSI BUKA APP ALIGHT MOTION
+// FUNGSI BUKA LINK (Android: coba buka app Alight dulu, fallback ke browser)
 function openAlightApp(url) {
   const isAndroid = /Android/i.test(navigator.userAgent);
   if (isAndroid) {
-    toast("Membuka Alight Motion...");
-    const cleanUrl = url.replace(/^https?:\/\//, '');
-    const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.alightcreative.motion;end`;
-    window.location.href = intentUrl;
-    setTimeout(() => { window.open(url, '_blank'); }, 1000);
+    toast('Membuka link...');
+    const cleanUrl = url.replace(/^https?:\/\//, '').replace(/#.*$/, '');
+    const fallback = encodeURIComponent(url);
+    window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.alightcreative.motion;S.browser_fallback_url=${fallback};end`;
   } else {
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener');
   }
 }
 
-// CEK INBOX (AKUNLAMA) - FIX LINK HTML (PAKE DOMPARSER)
+// CEK INBOX (AKUNLAMA) - v2: decode quoted-printable, ambil href asli
+const linkStore = [];
+
+function escHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function decodeQP(s){
+  return s.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
   setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',true);
-  
-  document.getElementById('inboxContainer').style.display = 'none';
-  
   try{
     const username = currentEmail.split('@')[0];
     const res = await fetch(`https://akunlama.com/api/list?recipient=${username}`);
     const data = await res.json();
-    
-    // Akunlama balikin data dalam bentuk array atau object 'data'
-    let messages = data.data || data.messages || (Array.isArray(data) ? data : []);
+    const messages = data.data || data.messages || (Array.isArray(data) ? data : []);
 
     if(messages && messages.length > 0){
-      toast(`Mendownload isi pesan...`);
-      let fullEmails = [];
-      
-      for(let i=0; i < messages.length; i++){
-        let msg = messages[i];
-        // Ambil storageKey buat narik HTML
-        let storageKey = msg.storageKey || msg.key || msg.id; 
-        
-        let htmlBody = "";
-        
+      toast('Mendownload isi pesan...');
+      const fullEmails = [];
+      for(const msg of messages){
+        const storageKey = msg.storageKey || msg.key || msg.id;
+        let rawHtml = '';
         if(storageKey){
-          try {
-            // Nembak ke getHtml buat dapet link asli
+          try{
             const detailRes = await fetch(`https://akunlama.com/api/getHtml?region=us&key=${storageKey}`);
-            // Ambil text mentahnya
-            let rawHtml = await detailRes.text();
-            
-            // Gunakan DOMParser buat nge-decode HTML yang di-encode
-            let doc = new DOMParser().parseFromString(rawHtml, "text/html");
-            htmlBody = doc.documentElement.textContent || rawHtml;
-            
-          } catch(e) { console.log("Gagal tarik html", e); }
+            rawHtml = await detailRes.text();
+          }catch(e){ console.log('Gagal tarik html', e); }
         }
-        
         fullEmails.push({
-          subject: msg.subject || msg.subj || "Aktivasi Akun",
-          from: msg.from || "Alight Creative",
+          subject: msg.subject || msg.subj || 'Aktivasi Akun',
+          from: msg.from || 'Alight Creative',
           date: msg.date || msg.time || new Date().toISOString(),
-          html: htmlBody,
-          text: msg.bodyText || msg.body || msg.preview || ""
+          html: rawHtml,
+          text: msg.bodyText || msg.body || msg.preview || ''
         });
       }
-      
-      renderInboxUI(fullEmails); 
+      renderInboxUI(fullEmails);
     }else{
-      toast('Inbox kosong. Tunggu 10 detik.');
-      const list = document.getElementById('inboxList');
-      list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:.8rem; border:1px dashed var(--line); border-radius:12px;">Belum ada pesan masuk. Tunggu 10-30 detik.</div>`;
+      document.getElementById('inboxList').innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:.8rem; border:1px dashed var(--line); border-radius:12px;">Belum ada pesan masuk. Tunggu 10-30 detik.</div>`;
       document.getElementById('inboxContainer').style.display = 'block';
+      toast('Inbox kosong. Tunggu 10 detik.');
     }
   }catch(e){
     toast('Gagal cek inbox: ' + e.message);
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
 }
 
-// RENDER UI INBOX (PERSIS KAYAK LOVABLE)
 function renderInboxUI(emails) {
   const list = document.getElementById('inboxList');
+  linkStore.length = 0;
   list.innerHTML = '';
-  
-  emails.forEach((m, i) => {
+
+  emails.forEach((m) => {
     let links = extractLinksFromText(m.html);
     if (links.length === 0) links = extractLinksFromText(m.text);
-    
-    let timeStr = m.date ? new Date(m.date).toLocaleTimeString() : "-";
+    const timeStr = m.date ? new Date(m.date).toLocaleTimeString() : '-';
 
     let card = `
-    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
       <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:flex-start; gap:10px;">
-        <div style="background: rgba(74,222,128,.1); padding: 6px; border-radius: 8px; color: var(--accent);">
+        <div style="background:rgba(74,222,128,.1); padding:6px; border-radius:8px; color:var(--accent);">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
         </div>
         <div style="flex:1;">
-          <div style="font-weight:800; font-size:.85rem; color:var(--fg); line-height:1.3;">${m.subject}</div>
-          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Pengirim: ${m.from}</div>
-          <div style="font-size:.65rem; color:var(--muted);">Waktu: ${timeStr}</div>
+          <div style="font-weight:800; font-size:.85rem; color:var(--fg); line-height:1.3;">${escHtml(m.subject)}</div>
+          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Pengirim: ${escHtml(m.from)}</div>
+          <div style="font-size:.65rem; color:var(--muted);">Waktu: ${escHtml(timeStr)}</div>
         </div>
       </div>`;
-      
-    if(links.length > 0) {
+
+    if(links.length > 0){
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line);">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
           <span style="color:var(--warn); font-size:.8rem;">⚡</span>
           <span style="font-size:.65rem; font-weight:800; color:var(--muted); letter-spacing:.1em;">LINK VERIFIKASI:</span>
         </div>`;
-        
-      links.forEach(l => {
-        let cleanLink = l.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+      links.forEach(link => {
+        const idx = linkStore.push(link) - 1;
         card += `
         <div style="background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px;">
-          <div style="font-family:monospace; font-size:.65rem; color:var(--accent-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:8px;">${cleanLink}</div>
+          <div style="font-family:monospace; font-size:.65rem; color:var(--accent-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:8px;">${escHtml(link)}</div>
           <div style="display:flex; gap:6px;">
-            <button onclick="fallbackCopy('${cleanLink}')" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">📋 Salin</button>
-            <button onclick="openAlightApp('${cleanLink}')" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
-            <button onclick="validasiOtomatis('${cleanLink}', '${currentEmail}')" style="flex:1; padding:8px; border-radius:6px; border:none; background:var(--accent); color:#000; font-size:.7rem; font-weight:800; cursor:pointer;">⚡ Pakai</button>
+            <button data-act="copy" data-idx="${idx}" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">📋 Salin</button>
+            <button data-act="open" data-idx="${idx}" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.7rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
+            <button data-act="use" data-idx="${idx}" style="flex:1; padding:8px; border-radius:6px; border:none; background:var(--accent); color:#000; font-size:.7rem; font-weight:800; cursor:pointer;">⚡ Pakai</button>
           </div>
         </div>`;
       });
@@ -339,33 +326,54 @@ function renderInboxUI(emails) {
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line);">
         <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Link tidak ditemukan. Coba klik Cek Inbox lagi.</div>
-        <button onclick="handleCheckInbox()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🔄 Refresh Cek Inbox</button>
+        <button data-act="refresh" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🔄 Refresh Cek Inbox</button>
       </div>`;
     }
-    
     card += `</div>`;
     list.innerHTML += card;
   });
-  
+
   document.getElementById('inboxContainer').style.display = 'block';
   document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-// REGEX SUPER KUAT (NANGKEP HREF DI DALAM HTML)
+// Event delegation: tombol di kartu inbox, aman dari masalah quote di URL
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('#inboxList button[data-act]');
+  if(!btn) return;
+  const act = btn.dataset.act;
+  if(act === 'refresh'){ handleCheckInbox(); return; }
+  const link = linkStore[Number(btn.dataset.idx)];
+  if(!link) return;
+  if(act === 'copy') copyText(link);
+  if(act === 'open') openAlightApp(link);
+  if(act === 'use') validasiOtomatis(link, currentEmail);
+});
+
+function copyText(text){
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>toast('✅ Link berhasil di-copy!')).catch(()=>fallbackCopy(text));
+  } else { fallbackCopy(text); }
+}
+
+// Ambil link dari HTML (href asli) dan teks. Prioritaskan link verifikasi.
 function extractLinksFromText(text) {
   if(!text) return [];
-  const urlRegex = /(https?:\/\/[^\s"'<>\\]+)/gi;
-  let matches = text.match(urlRegex) || [];
-  matches = matches.map(url => url.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/%3D/g, '='));
+  let src = /=3D|=20|=\r?\n/i.test(text) ? decodeQP(text) : text;
+  src = src.replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;/g, "'");
 
-  const alightLinks = matches.filter(link => 
-    link.includes('alight') || 
-    link.includes('firebaseapp') || 
-    link.includes('auth_action')
-  );
+  const found = new Set();
+  const hrefRe = /href\s*=\s*["']?\s*(https?:\/\/[^"'\s<>]+)/gi;
+  let m;
+  while((m = hrefRe.exec(src))) found.add(m[1]);
+  (src.match(/https?:\/\/[^\s"'<>\\]+/gi) || []).forEach(u => found.add(u));
 
-  if (alightLinks.length > 0) return [...new Set(alightLinks)];
-  return []; 
+  const all = [...found]
+    .map(u => u.replace(/[.,;)]+$/, ''))
+    .filter(u => !/\.(png|jpe?g|gif|css|svg|webp|ico)(\?|$)/i.test(u));
+
+  const verify = all.filter(u => /alight|firebaseapp|auth|verif|oobcode|mode=|magic|token|signin|confirm|activ/i.test(u));
+  return [...new Set(verify.length ? verify : all)].slice(0, 5);
 }
 
 window.validasiOtomatis = async function(link, email) {
