@@ -197,7 +197,7 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 .info-item li{font-size:.86rem;color:var(--muted);display:flex;gap:8px}
 .info-item li::before{content:"OK";color:var(--ok);font-weight:800;font-size:.7rem;letter-spacing:.05em}
 
-/* CREATOR CARD (BERSIH TANPA NOMOR) */
+/* CREATOR CARD (ROMBAK TOTAL TANPA NOMOR) */
 .creator-card{
   max-width:400px;margin:0 auto;
   background:linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(5,5,5,1) 100%);
