@@ -174,7 +174,7 @@ function showPremiumModal(data) {
 function closePremiumModal() { document.getElementById('premiumModal').classList.remove('show'); }
 
 // ==========================================
-// TEMP MAIL (TEMPMAIL.ING API)
+// TEMP MAIL (TEMPMAIL.ING API - FULL DI WEB SENDIRI)
 // ==========================================
 let currentEmail = "";
 let autoInterval = null;
@@ -197,7 +197,7 @@ async function handleGenEmail(){
       emailStr = data.email;
     }
 
-    if(!emailStr) throw new Error("Gagal dapet email.");
+    if(!emailStr) throw new Error("Gagal dapet email dari server.");
     
     currentEmail = emailStr;
     document.getElementById('emailOutput').value = currentEmail;
@@ -224,12 +224,12 @@ function fallbackCopy(text) {
   const ta = document.createElement("textarea");
   ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
   document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); toast('✅ Email di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
+  try { document.execCommand('copy'); toast('✅ Link berhasil di-copy!'); } catch(e) { toast('❌ Gagal copy'); }
   document.body.removeChild(ta);
 }
 
 // ==========================================
-// UI INBOX BARU (GANTIIN JSON)
+// UI INBOX (READ FULL MESSAGE & EXTRACT LINK)
 // ==========================================
 async function handleCheckInbox(){
   if(!currentEmail) { toast('Generate email dulu!'); return; }
@@ -244,8 +244,13 @@ async function handleCheckInbox(){
     const data = await res.json();
     
     if(data && data.emails && data.emails.length > 0){
-      toast(`Ada ${data.emails.length} pesan!`);
-      renderInboxUI(data.emails);
+      toast(`Membaca pesan...`);
+      // Ambil detail penuh biar dapet link asli (karena list cuma kasih preview)
+      const msgId = data.emails[0].id || data.emails[0]._id;
+      const detailRes = await fetch(`https://api.tempmail.ing/api/emails/${encodedEmail}/${msgId}`);
+      const detailData = await detailRes.json();
+      
+      renderInboxUI([detailData]); // Kirim data full ke fungsi UI
     }else{
       toast('Inbox kosong.');
       const list = document.getElementById('inboxList');
@@ -257,47 +262,56 @@ async function handleCheckInbox(){
   }finally{ setLoading('btnCheckInbox','loaderCheckInbox','btnCheckInboxText',false); }
 }
 
-// FUNGSI RENDER UI INBOX (BUKAN JSON)
+// FUNGSI RENDER UI INBOX (BUKAN JSON & FULL DI WEB KITA)
 function renderInboxUI(emails) {
   const list = document.getElementById('inboxList');
   list.innerHTML = '';
   
   emails.forEach((m, i) => {
-    const textBody = m.body_text || m.text || m.html || "";
-    const links = extractLinksFromText(textBody);
+    // Ambil body HTML atau text
+    const htmlBody = m.html || "";
+    const textBody = m.text || m.body_text || "";
     
-    // Card UI persis kayak gambar
+    // Ekstrak link dari HTML atau text
+    let links = extractLinksFromText(htmlBody);
+    if (links.length === 0) links = extractLinksFromText(textBody);
+
+    const sender = m.from || m.from_email || "Alight Creative";
+    const subject = m.subject || "Aktivasi Akun";
+    const timeStr = new Date(m.created_at || m.date || Date.now()).toLocaleTimeString();
+
     let card = `
-    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden;">
-      <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:center; gap:8px;">
-        <span style="font-size:1rem;">📩</span>
-        <span style="font-weight:700; font-size:.8rem; color:var(--fg); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.subject || 'No Subject'}</span>
-      </div>
-      <div style="padding:12px 16px; font-size:.75rem; color:var(--muted); display:flex; flex-direction:column; gap:4px;">
-        <div><b>Pengirim:</b> ${m.from}</div>
-        <div><b>Waktu:</b> ${new Date(m.created_at || Date.now()).toLocaleTimeString()}</div>
+    <div style="background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:12px;">
+      <div style="padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); display:flex; align-items:flex-start; gap:8px;">
+        <span style="font-size:1.2rem; margin-top:2px;">📩</span>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:.85rem; color:var(--fg); line-height:1.3;">${subject}</div>
+          <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Dari: ${sender}</div>
+          <div style="font-size:.65rem; color:var(--muted);">Waktu: ${timeStr}</div>
+        </div>
       </div>`;
       
     if(links.length > 0) {
       card += `
-      <div style="padding:12px 16px; border-top:1px dashed var(--line);">
-        <div style="font-size:.65rem; font-weight:800; color:var(--accent); margin-bottom:8px;">LINK VERIFIKASI:</div>`;
+      <div style="padding:12px 16px; border-top:1px dashed var(--line); background: rgba(74,222,128,.03);">
+        <div style="font-size:.65rem; font-weight:800; color:var(--accent); margin-bottom:8px;">LINK VERIFIKASI DITEMUKAN:</div>`;
         
       links.forEach(l => {
+        // Bersihin HTML entities (misal &amp; jadi &)
+        let cleanLink = l.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
         card += `
-        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-          <input type="text" readonly value="${l}" style="flex:1 1 100%; background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:8px; padding:10px; color:var(--accent-2); font-size:.65rem; font-family:monospace; outline:none;">
-          <button onclick="fallbackCopy('${l}')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">Salin</button>
-          <button onclick="window.open('${l}', '_blank')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">Buka</button>
-          <button onclick="validasiOtomatis('${l}', '${currentEmail}')" style="flex:1; padding:8px; border-radius:8px; border:none; background:var(--accent); color:#000; font-size:.75rem; font-weight:800; cursor:pointer;">Pakai</button>
+        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+          <input type="text" readonly value="${cleanLink}" style="flex:1 1 100%; background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:8px; padding:10px; color:var(--accent-2); font-size:.65rem; font-family:monospace; outline:none; margin-bottom:4px;">
+          <button onclick="fallbackCopy('${cleanLink}')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">📋 Salin</button>
+          <button onclick="window.open('${cleanLink}', '_blank')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">🌐 Buka</button>
+          <button onclick="validasiOtomatis('${cleanLink}', '${currentEmail}')" style="flex:1; padding:8px; border-radius:8px; border:none; background:var(--accent); color:#000; font-size:.75rem; font-weight:800; cursor:pointer;">⚡ Pakai</button>
         </div>`;
       });
       card += `</div>`;
     } else {
       card += `
       <div style="padding:12px 16px; border-top:1px dashed var(--line);">
-        <div style="font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:8px;">Tidak ada link terdeteksi di body text.</div>
-        <button onclick="window.open('https://tempmail.ing', '_blank')" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:.75rem; font-weight:700; cursor:pointer;">Lihat di Web TempMail</button>
+        <div style="font-size:.7rem; color:var(--muted); font-style:italic;">Gagal mengekstrak link dari pesan ini.</div>
       </div>`;
     }
     
@@ -309,11 +323,21 @@ function renderInboxUI(emails) {
   document.getElementById('inboxContainer').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+// Ekstrak Link (Lebih kuat buat nangkep link firebase)
 function extractLinksFromText(text) {
   if(!text) return [];
-  // Regex buat cari link
-  const urlRegex = /(https?:\/\/[^\s"'<>]+)/gi;
-  return text.match(urlRegex) || [];
+  // Cari link alight-creative atau firebaseapp
+  const regex = /(https?:\/\/[^\s"'<>]+)/gi;
+  const matches = text.match(regex) || [];
+  
+  // Filter cuma link yang ada hubungannya sama alight/firebase biar gak berantakan
+  const validLinks = matches.filter(link => 
+    link.includes('alight') || 
+    link.includes('firebaseapp') || 
+    link.includes('auth_action')
+  );
+  
+  return validLinks.length > 0 ? validLinks : matches.slice(0, 3); // Kalau gak ada, ambil 3 link aja
 }
 
 window.validasiOtomatis = async function(link, email) {
