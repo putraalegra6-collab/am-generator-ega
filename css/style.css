@@ -326,3 +326,62 @@ section.sec{max-width:var(--maxw);margin:0 auto;padding:56px 22px}
 html[data-return="1"] .loader{display:none!important}
 html[data-return="1"] .reveal{opacity:1!important;transform:none!important}
 html[data-return="1"] .reveal{transition:none!important}
+
+/* =========================================
+   STYLE PREMIUM MODAL POP-UP (ANIMASI KEREN)
+   ========================================= */
+.premium-modal {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.85); backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .4s ease;
+  padding: 20px;
+}
+.premium-modal.show { opacity: 1; pointer-events: auto; }
+.premium-card {
+  background: linear-gradient(145deg, #0a0a0a, #121c15);
+  border: 1px solid rgba(74,222,128,.3);
+  border-radius: 24px; width: 100%; max-width: 380px;
+  padding: 36px 24px; text-align: center; position: relative;
+  box-shadow: 0 20px 60px rgba(74,222,128,.15), inset 0 0 0 1px rgba(255,255,255,.05);
+  transform: translateY(30px) scale(.9); transition: all .5s cubic-bezier(.22,.61,.36,1);
+  overflow: hidden;
+}
+.premium-modal.show .premium-card { transform: translateY(0) scale(1); }
+.premium-glow {
+  position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
+  width: 200%; height: 200%; background: radial-gradient(circle, rgba(74,222,128,.15) 0%, transparent 60%);
+  pointer-events: none; z-index: 0; animation: premiumPulse 3s infinite alternate;
+}
+@keyframes premiumPulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+.premium-icon {
+  width: 70px; height: 70px; margin: 0 auto 20px;
+  border-radius: 50%; background: rgba(74,222,128,.15);
+  border: 2px solid #4ade80; color: #4ade80;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: bold; position: relative; z-index: 1;
+  box-shadow: 0 0 20px rgba(74,222,128,.3);
+  animation: premiumScaleIn .6s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes premiumScaleIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+.premium-badge {
+  display: inline-block; background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  color: #000; font-size: .7rem; font-weight: 800;
+  padding: 6px 14px; border-radius: 20px; margin-bottom: 12px;
+  letter-spacing: 1px; position: relative; z-index: 1;
+}
+.premium-card h2 { font-size: 1.4rem; margin-bottom: 6px; color: #fff; position: relative; z-index: 1; }
+.premium-card p { font-size: .85rem; color: #9b9b9b; margin-bottom: 24px; position: relative; z-index: 1; }
+.premium-details {
+  background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px; padding: 16px; margin-bottom: 24px;
+  position: relative; z-index: 1; text-align: left;
+}
+.p-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,.08);
+  font-size: .8rem;
+}
+.p-row:last-child { border-bottom: none; }
+.p-row span { color: #9b9b9b; }
+.p-row b { color: #4ade80; font-weight: 700; font-family: "Cascadia Code", Consolas, monospace; }
