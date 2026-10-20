@@ -4,15 +4,63 @@ const ACCESS_KEY = 'Egaa';
 const isReturn = document.documentElement.getAttribute('data-return') === '1';
 
 // ==========================================
-// STYLE TAMBAHAN (disuntik dari JS)
+// LAPISAN TAMPILAN (disuntik dari JS)
 // ==========================================
 function injectUI(){
   if(document.getElementById('am-ui')) return;
   const s = document.createElement('style');
   s.id = 'am-ui';
   s.textContent = `
+    /* ---------- Gerak dasar ---------- */
+    @keyframes amPageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    @keyframes amFade{from{opacity:0}to{opacity:1}}
+    @keyframes amPop{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+    html{scroll-behavior:smooth;}
+    body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+    button,input,a{-webkit-tap-highlight-color:transparent;}
+
+    .page{will-change:opacity,transform;}
+    .page.active{animation:amPageIn .5s cubic-bezier(.2,.7,.2,1) both;}
+
+    button{transition:transform .18s ease,background-color .3s ease,border-color .3s ease,color .3s ease,box-shadow .3s ease,opacity .3s ease;}
+    button:active:not(:disabled){transform:scale(.97);}
+    button:disabled{opacity:.5;cursor:not-allowed;}
+
+    input,textarea{transition:border-color .3s ease,box-shadow .3s ease,background-color .3s ease;}
+    input:focus,textarea:focus{outline:none;border-color:rgba(255,255,255,.45)!important;box-shadow:0 0 0 3px rgba(255,255,255,.07);}
+
+    /* ---------- Bottom nav ---------- */
+    .bottom-nav button{transition:color .3s ease,opacity .3s ease,transform .25s ease;}
+    .bottom-nav button.on{transform:translateY(-2px);}
+
+    /* ---------- Tab Tool / TempMail ---------- */
+    .tab{transition:background-color .3s ease,color .3s ease,opacity .3s ease;}
+    .tab.active{animation:amFade .35s ease both;}
+
+    /* ---------- Kartu (hover halus di desktop) ---------- */
+    @media (hover:hover){
+      .page [class*="card"]{transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .35s ease,background-color .35s ease;}
+      .page [class*="card"]:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)!important;}
+    }
+
+    /* ---------- Loading screen ---------- */
+    #loader{transition:opacity .8s ease,visibility .8s ease;}
+    #loader.done{opacity:0;visibility:hidden;pointer-events:none;}
+    #loaderBar{transition:width 1.8s cubic-bezier(.4,0,.2,1)!important;}
+    #loaderTyping{letter-spacing:.16em;text-transform:uppercase;font-size:.7rem;}
+
+    /* ---------- Toast ---------- */
+    .toast{transition:opacity .35s ease,transform .35s cubic-bezier(.2,.7,.2,1);letter-spacing:.02em;}
+
+    /* ---------- Modal ---------- */
+    #keyModal.show,#premiumModal.show{animation:amFade .3s ease both;}
+    #premiumModal.show .pm-card{animation:amPop .45s cubic-bezier(.2,.7,.2,1) both;}
+
+    /* ---------- Inbox ---------- */
     .mail-list{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
-    .mail-item{border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025);overflow:hidden;}
+    .mail-item{border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025);overflow:hidden;animation:amPop .4s cubic-bezier(.2,.7,.2,1) both;}
+    .mail-item:nth-child(2){animation-delay:.06s;}
+    .mail-item:nth-child(3){animation-delay:.12s;}
     .mail-head{padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;}
     .mail-from{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted,#8a8a8a);}
     .mail-subject{font-size:.92rem;font-weight:600;color:var(--fg,#fff);line-height:1.4;word-break:break-word;}
@@ -22,16 +70,20 @@ function injectUI(){
     .mail-link{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;color:var(--accent-2,#a7f3d0);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .mail-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
     .ib-btn{padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--fg,#fff);font-size:.72rem;font-weight:600;letter-spacing:.03em;cursor:pointer;}
-    .ib-btn:active{opacity:.7;}
+    .ib-btn:hover{border-color:rgba(255,255,255,.4);}
     .ib-btn.primary{background:var(--fg,#fff);color:#000;border-color:transparent;}
+    .ib-btn.primary:hover{opacity:.9;}
     .mail-empty{padding:18px 16px;border:1px dashed rgba(255,255,255,.12);border-radius:12px;font-size:.76rem;color:var(--muted,#8a8a8a);text-align:center;line-height:1.5;}
     .mail-debug{font-family:ui-monospace,monospace;font-size:.6rem;color:var(--muted,#8a8a8a);word-break:break-all;margin:0 0 10px;}
     .mail-retry{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--fg,#fff);font-size:.72rem;font-weight:600;cursor:pointer;}
+    .mail-retry:hover{border-color:rgba(255,255,255,.4);}
 
+    /* ---------- Modal premium ---------- */
     #premiumModal .pm-card{width:min(92vw,380px);margin:auto;padding:28px 24px 22px;border-radius:16px;background:#0e0e0e;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.5);color:#fff;}
     .pm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
     .pm-tag{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:#a7f3d0;border:1px solid rgba(167,243,208,.3);padding:5px 9px;border-radius:999px;}
     .pm-close{background:transparent;border:none;color:var(--muted,#8a8a8a);font-size:.72rem;cursor:pointer;letter-spacing:.04em;}
+    .pm-close:hover{color:#fff;}
     .pm-title{margin:0 0 6px;font-size:1.35rem;font-weight:700;letter-spacing:-.01em;}
     .pm-sub{margin:0 0 22px;font-size:.8rem;color:var(--muted,#8a8a8a);line-height:1.5;}
     .pm-list{margin:0;display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,.08);}
@@ -39,6 +91,12 @@ function injectUI(){
     .pm-row dt{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted,#8a8a8a);}
     .pm-row dd{margin:0;font-size:.8rem;color:#fff;text-align:right;word-break:break-all;font-family:ui-monospace,monospace;}
     .pm-done{width:100%;margin-top:22px;padding:13px;border-radius:10px;border:none;background:#fff;color:#000;font-size:.82rem;font-weight:700;letter-spacing:.04em;cursor:pointer;}
+    .pm-done:hover{opacity:.92;}
+
+    /* ---------- Hormati pengaturan "kurangi gerakan" ---------- */
+    @media (prefers-reduced-motion:reduce){
+      *{animation:none!important;transition:none!important;}
+    }
   `;
   document.head.appendChild(s);
 }
@@ -66,9 +124,9 @@ if(loader){
     const barEl = document.getElementById('loaderBar');
     const texts = ["Initializing...", "Connecting to API...", "Loading modules...", "Almost ready..."];
     let i = 0;
-    setInterval(()=>{ textEl.textContent = texts[i]; i = (i+1)%texts.length; }, 500);
-    setTimeout(()=>{ barEl.style.width = "100%"; }, 100);
-    setTimeout(()=>{ loader.classList.add('done'); }, 2000);
+    const typing = setInterval(()=>{ if(textEl){ textEl.textContent = texts[i]; i = (i+1)%texts.length; } }, 550);
+    setTimeout(()=>{ if(barEl) barEl.style.width = "100%"; }, 100);
+    setTimeout(()=>{ clearInterval(typing); loader.classList.add('done'); }, 2200);
   } else {
     loader.style.display = 'none';
   }
