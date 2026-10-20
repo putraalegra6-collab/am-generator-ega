@@ -13,17 +13,20 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
 </head>
 <body>
 <div class="grid-bg"></div>
+<div class="glow glow-a"></div>
+<div class="glow glow-b"></div>
 <div class="noise"></div>
 <canvas id="fx"></canvas>
 
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="#page-home" data-go="home">
-      <span>AM GENERATOR</span><span class="dot-end">.</span><span class="brand-name">Egaa</span>
+      <span class="brand-mark"><img src="img/avatar-mono.png" alt=""></span>
+      <span class="brand-text">AM GENERATOR<span class="dot-end">.</span></span>
+      <span class="brand-name">Egaa</span>
     </a>
     <div class="nav-right">
       <div class="status-pill"><span class="dot"></span><span>Online</span></div>
-      <div class="nav-avatar"><img id="navAvatar" src="img/avatar-mono.png" alt="AM"></div>
     </div>
   </div>
 </header>
@@ -32,7 +35,7 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
 
   <section class="page active" id="page-home">
     <div class="hero">
-      <p class="eyebrow reveal">Premium Activation</p>
+      <span class="eyebrow reveal">Premium Activation</span>
       <h1 class="reveal" style="--d:.08s">AM <span class="accent">Generator</span></h1>
       <p class="subtitle reveal" style="--d:.16s">Alight Motion Premium Activation</p>
       <p class="desc reveal" style="--d:.24s">Aktifkan pengalaman premium Alight Motion dengan cepat, mudah, dan aman. Cukup tiga langkah sederhana.</p>
@@ -40,38 +43,125 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
         <button class="btn btn-primary" type="button" data-go="tool">Aktivasi Premium</button>
         <button class="btn btn-ghost" type="button" data-go="cara">Cara Kerja</button>
       </div>
-      <div class="badge-row reveal" style="--d:.4s">
-        <span class="badge">Instant</span>
-        <span class="badge">3 Langkah</span>
-        <span class="badge">Terverifikasi</span>
+      <div class="stats reveal" style="--d:.4s">
+        <div class="stat"><b>3</b><span>Langkah</span></div>
+        <div class="stat"><b>Gratis</b><span>Tanpa ribet</span></div>
+        <div class="stat"><b>Aman</b><span>Terverifikasi</span></div>
       </div>
     </div>
 
     <div class="sec">
-      <div class="sec-head reveal"><p class="kicker">Keunggulan</p><h2>Kenapa AM Generator?</h2></div>
+      <div class="sec-head reveal"><p class="kicker">Keunggulan</p><h2>Kenapa AM Generator?</h2><p>Dibuat supaya proses aktivasi terasa singkat dan tidak membingungkan.</p></div>
       <div class="grid-3">
-        <article class="glass-card reveal" style="--d:.05s"><span class="num">01</span><h3>Cepat</h3><p>Proses aktivasi instan tanpa menunggu lama.</p></article>
-        <article class="glass-card reveal" style="--d:.12s"><span class="num">02</span><h3>Sederhana</h3><p>Hanya tiga langkah mudah untuk menyelesaikan.</p></article>
-        <article class="glass-card reveal" style="--d:.19s"><span class="num">03</span><h3>Aman</h3><p>Akses aman dan terverifikasi.</p></article>
+        <article class="glass-card reveal" style="--d:.05s">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></div>
+          <h3>Cepat</h3><p>Proses aktivasi instan tanpa menunggu lama.</p>
+        </article>
+        <article class="glass-card reveal" style="--d:.12s">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><path d="M12 2l10 5-10 5L2 7z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg></div>
+          <h3>Sederhana</h3><p>Hanya tiga langkah mudah untuk menyelesaikan.</p>
+        </article>
+        <article class="glass-card reveal" style="--d:.19s">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h3>Aman</h3><p>Akses aman dan terverifikasi di setiap langkah.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head reveal"><p class="kicker">Alur Singkat</p><h2>Dari email ke premium</h2></div>
+      <div class="flow reveal">
+        <div class="flow-item"><span class="flow-no">1</span><div><h4>Kirim email</h4><p>Masukkan email target di tab Tool.</p></div></div>
+        <div class="flow-item"><span class="flow-no">2</span><div><h4>Salin link</h4><p>Ambil link dari inbox atau folder spam.</p></div></div>
+        <div class="flow-item"><span class="flow-no">3</span><div><h4>Validasi</h4><p>Tempel link dan akun langsung aktif.</p></div></div>
+      </div>
+    </div>
+
+    <div class="cta reveal">
+      <h3>Siap mengaktifkan premium?</h3>
+      <p>Mulai dari tab Tool, atau buat email sementara dulu di tab Email.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" type="button" data-go="tool">Mulai Sekarang</button>
+        <button class="btn btn-ghost" type="button" data-go="email">Buat Email</button>
       </div>
     </div>
   </section>
 
   <section class="page" id="page-cara">
     <div class="sec">
-      <div class="sec-head reveal"><p class="kicker">Cara Kerja</p><h2>Ikuti 3 Langkah Mudah</h2><p>Aktivasi premium hanya butuh tiga langkah sederhana.</p></div>
-      <div class="grid-3">
-        <article class="glass-card reveal" style="--d:.05s"><span class="num">01</span><h3>Masukkan Email</h3><p>Input alamat email kamu untuk meminta link aktivasi unik.</p></article>
-        <article class="glass-card reveal" style="--d:.12s"><span class="num">02</span><h3>Salin Link</h3><p>Cek inbox atau folder spam, lalu salin link yang dikirim.</p></article>
-        <article class="glass-card reveal" style="--d:.19s"><span class="num">03</span><h3>Aktivasi</h3><p>Tempel link untuk langsung membuka pengalaman premium kamu.</p></article>
+      <div class="sec-head reveal"><p class="kicker">Cara Kerja</p><h2>Ikuti 3 Langkah Mudah</h2><p>Aktivasi premium hanya butuh tiga langkah sederhana. Ikuti urutannya dari atas ke bawah.</p></div>
+
+      <div class="steps">
+        <div class="step reveal" style="--d:.05s">
+          <div class="step-no">1</div>
+          <div class="step-card">
+            <h3>Masukkan Email</h3>
+            <p>Input alamat email kamu untuk meminta link aktivasi unik. Pastikan email yang kamu tulis aktif dan bisa diakses.</p>
+            <div class="mini-tags"><span>Email aktif</span><span>Tanpa daftar akun</span></div>
+          </div>
+        </div>
+        <div class="step reveal" style="--d:.12s">
+          <div class="step-no">2</div>
+          <div class="step-card">
+            <h3>Salin Link</h3>
+            <p>Cek inbox atau folder spam, lalu salin link yang dikirim. Link biasanya masuk dalam beberapa detik.</p>
+            <div class="mini-tags"><span>Cek Spam</span><span>Salin cepat</span></div>
+          </div>
+        </div>
+        <div class="step reveal" style="--d:.19s">
+          <div class="step-no">3</div>
+          <div class="step-card">
+            <h3>Aktivasi</h3>
+            <p>Tempel link di tab Validasi Link. Setelah berhasil, detail akun premium akan tampil di layar.</p>
+            <div class="mini-tags"><span>Validasi</span><span>Premium aktif</span></div>
+          </div>
+        </div>
       </div>
-      <div class="center-action reveal" style="--d:.26s"><button class="btn btn-primary" type="button" data-go="tool">Mulai Sekarang</button></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head reveal"><p class="kicker">Sebelum Mulai</p><h2>Checklist singkat</h2></div>
+      <div class="checklist reveal">
+        <div class="check-item">Gunakan email yang aktif dan sering kamu buka.</div>
+        <div class="check-item">Siapkan Alight Motion di HP sebelum mulai.</div>
+        <div class="check-item">Link verifikasi sekali pakai dan cepat kedaluwarsa, jadi langsung dipakai.</div>
+        <div class="check-item">Kalau email belum masuk, tunggu 10 sampai 30 detik lalu cek ulang.</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head reveal"><p class="kicker">Tips</p><h2>Biar prosesnya lancar</h2></div>
+      <div class="grid-3">
+        <article class="glass-card reveal" style="--d:.05s"><h3>Cek folder Spam</h3><p>Link kadang masuk ke folder Spam atau Promosi, jadi jangan hanya lihat inbox utama.</p></article>
+        <article class="glass-card reveal" style="--d:.12s"><h3>Jangan tunggu lama</h3><p>Link verifikasi punya masa berlaku singkat. Begitu dapat, langsung validasi.</p></article>
+        <article class="glass-card reveal" style="--d:.19s"><h3>Satu link, satu akun</h3><p>Pakai link dari email yang sama dengan yang kamu isi di tab Tool.</p></article>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head reveal"><p class="kicker">FAQ</p><h2>Pertanyaan yang sering ditanyakan</h2></div>
+      <div class="faq-list reveal">
+        <details class="faq"><summary>Link tidak muncul di inbox, apa yang harus dilakukan?</summary><p>Cek folder Spam atau Promosi, lalu tunggu beberapa detik dan kirim ulang email target dari tab Tool.</p></details>
+        <details class="faq"><summary>Kenapa link saya tidak bisa dipakai?</summary><p>Link verifikasi hanya bisa dipakai sekali dan cepat kedaluwarsa. Minta link baru lalu langsung validasi.</p></details>
+        <details class="faq"><summary>Apakah perlu daftar akun?</summary><p>Tidak perlu. Cukup isi email target, lalu ikuti tiga langkah di halaman ini.</p></details>
+      </div>
+    </div>
+
+    <div class="cta reveal">
+      <h3>Sudah siap?</h3>
+      <p>Langsung mulai dari tab Tool.</p>
+      <div class="hero-actions"><button class="btn btn-primary" type="button" data-go="tool">Mulai Sekarang</button></div>
     </div>
   </section>
 
   <section class="page" id="page-tool">
     <div class="sec narrow">
       <div class="sec-head reveal"><p class="kicker">Tool</p><h2>Generator Premium</h2><p>Kirim link aktivasi, lalu validasi link yang kamu terima.</p></div>
+      <div class="chip-row reveal" style="--d:.04s">
+        <span class="chip"><b>01</b> Kirim email</span>
+        <span class="chip"><b>02</b> Salin link</span>
+        <span class="chip"><b>03</b> Validasi</span>
+      </div>
       <div class="tool-card reveal" style="--d:.08s">
         <div class="tabs">
           <button class="tab active" id="tabSendBtn" type="button" onclick="switchTab('send')">Kirim Email</button>
@@ -84,6 +174,7 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
             <input type="email" id="emailInput" class="mono" placeholder="contoh@email.com" autocomplete="off">
           </div>
           <button class="btn btn-primary btn-block" id="btnSend" type="button" onclick="handleSend()"><span id="btnSendText">Kirim Link</span><span class="loader-spin" id="loaderSend"></span></button>
+          <p class="hint">Link aktivasi akan dikirim ke email di atas. Setelah itu, pindah ke tab Validasi Link.</p>
         </div>
 
         <div class="tab-content" id="tab-verify">
@@ -116,6 +207,11 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
   <section class="page" id="page-email">
     <div class="sec narrow">
       <div class="sec-head reveal"><p class="kicker">Email Generator</p><h2>Temp Email</h2><p>Buat email sementara untuk menerima link verifikasi.</p></div>
+      <div class="chip-row reveal" style="--d:.04s">
+        <span class="chip">Inbox otomatis</span>
+        <span class="chip">Auto refresh</span>
+        <span class="chip">Salin cepat</span>
+      </div>
       <div class="tool-card reveal" style="--d:.08s">
         <div class="field">
           <label for="emailUser">Username (kosongkan untuk random)</label>
@@ -143,28 +239,64 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
           <div id="inboxList"></div>
         </div>
       </div>
+
+      <div class="grid-2 reveal" style="--d:.12s;margin-top:18px">
+        <article class="glass-card"><h3>Tips email</h3><p>Pakai username yang mudah diingat, lalu catat emailnya selama proses aktivasi berlangsung.</p></article>
+        <article class="glass-card"><h3>Kalau inbox kosong</h3><p>Tunggu 10 sampai 30 detik, lalu tekan Cek Inbox atau aktifkan Auto refresh.</p></article>
+      </div>
     </div>
   </section>
 
   <section class="page" id="page-info">
     <div class="sec">
-      <div class="sec-head reveal"><p class="kicker">Info</p><h2>Yang Perlu Kamu Tahu</h2></div>
+      <div class="sec-head reveal"><p class="kicker">Info</p><h2>Yang Perlu Kamu Tahu</h2><p>Penjelasan singkat tentang cara kerja tool dan hal yang perlu diperhatikan.</p></div>
       <div class="info-grid">
-        <article class="info-item reveal" style="--d:.05s"><h3>Cara Kerja Tool</h3><p>Generator mengirim link aktivasi ke email kamu. Setelah itu, salin link dari email (cek folder spam) dan validasi di halaman Tool untuk mengaktifkan premium.</p></article>
-        <article class="info-item reveal" style="--d:.12s"><h3>Keuntungan</h3><ul><li>Proses cepat dan otomatis</li><li>Aman dan terverifikasi</li><li>Gratis tanpa ribet</li><li>Bisa diulang kapan saja</li></ul></article>
-        <article class="info-item reveal" style="--d:.19s"><h3>Catatan</h3><p>Gunakan email aktif. Link kadang masuk ke folder Spam. Jika link tidak ditemukan, coba kirim ulang email target.</p></article>
+        <article class="info-item reveal" style="--d:.05s">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div>
+          <h3>Cara Kerja Tool</h3>
+          <p>Generator mengirim link aktivasi ke email kamu. Setelah itu, salin link dari email (cek folder spam) dan validasi di halaman Tool untuk mengaktifkan premium.</p>
+        </article>
+        <article class="info-item reveal" style="--d:.12s">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <h3>Keuntungan</h3>
+          <ul><li>Proses cepat dan otomatis</li><li>Aman dan terverifikasi</li><li>Gratis tanpa ribet</li><li>Bisa diulang kapan saja</li></ul>
+        </article>
+        <article class="info-item reveal" style="--d:.19s">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <h3>Catatan</h3>
+          <p>Gunakan email aktif. Link kadang masuk ke folder Spam. Jika link tidak ditemukan, coba kirim ulang email target.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head reveal"><p class="kicker">Detail</p><h2>Hal teknis yang perlu tahu</h2></div>
+      <div class="grid-2">
+        <article class="glass-card reveal" style="--d:.05s"><h3>Email sementara</h3><p>Inbox email sementara bersifat publik dan bisa dibaca siapa saja yang tahu alamatnya. Jangan pakai untuk data sensitif.</p></article>
+        <article class="glass-card reveal" style="--d:.12s"><h3>Link sekali pakai</h3><p>Setiap link verifikasi hanya berlaku sekali dan punya masa berlaku singkat. Jika sudah terpakai, minta link baru.</p></article>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head reveal"><p class="kicker">FAQ</p><h2>Pertanyaan umum</h2></div>
+      <div class="faq-list reveal">
+        <details class="faq"><summary>Berapa lama link aktivasi datang?</summary><p>Biasanya dalam hitungan detik sampai beberapa menit. Kalau belum masuk, cek folder Spam dan tekan Cek Inbox lagi.</p></details>
+        <details class="faq"><summary>Apakah ada biaya?</summary><p>Tidak ada biaya di tool ini. Proses aktivasi dilakukan dari tab Tool.</p></details>
+        <details class="faq"><summary>Kenapa muncul pesan gagal?</summary><p>Biasanya link sudah terpakai, sudah kedaluwarsa, atau salah salin. Ambil link terbaru lalu coba lagi.</p></details>
       </div>
     </div>
   </section>
 
   <section class="page" id="page-creator">
     <div class="sec">
-      <div class="sec-head reveal"><p class="kicker">Creator</p><h2>Alight Motion</h2></div>
+      <div class="sec-head reveal"><p class="kicker">Creator</p><h2>Alight Motion</h2><p>Tool ini dikelola langsung oleh Egaa.</p></div>
+
       <div class="creator-card reveal" style="--d:.08s">
-        <div class="av"><img id="creatorAvatar" src="img/avatar-mono.png" alt="Egaa"></div>
+        <div class="creator-glow"></div>
+        <div class="creator-ring"><div class="av"><img id="creatorAvatar" src="img/avatar-mono.png" alt="Egaa"></div></div>
         <h3>Egaa</h3>
         <div class="role">Creator dan Pengelola</div>
-        <p class="creator-desc">Butuh bantuan, pertanyaan, atau kendala? Hubungi langsung melalui WhatsApp.</p>
+        <p class="creator-desc">Butuh bantuan, pertanyaan, atau kendala? Hubungi langsung melalui WhatsApp atau ikuti channel untuk update terbaru.</p>
         <div class="creator-actions">
           <a class="btn btn-wa" href="https://wa.me/62881026046579" target="_blank" rel="noopener">
             <svg class="wa-ico" viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.26 8.26 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 4.54 0 8.24 3.7 8.24 8.24 0 4.54-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.13-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.1-.23-.16-.48-.29z"/></svg>
@@ -173,14 +305,35 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
           <a class="btn btn-ghost" href="https://whatsapp.com/channel/0029VbEUPJK8fewu2cbXBp01" target="_blank" rel="noopener">Channel</a>
         </div>
       </div>
+
+      <div class="stats reveal" style="--d:.14s;margin-top:22px">
+        <div class="stat"><b>Alight</b><span>Motion</span></div>
+        <div class="stat"><b>Premium</b><span>Activation</span></div>
+        <div class="stat"><b>Support</b><span>WhatsApp</span></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head reveal"><p class="kicker">Hubungi</p><h2>Pilih cara yang kamu suka</h2></div>
+      <div class="grid-2">
+        <a class="contact-tile reveal" style="--d:.05s" href="https://wa.me/62881026046579" target="_blank" rel="noopener">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div><h3>Chat langsung</h3><p>Tanya kendala atau minta bantuan aktivasi.</p></div>
+        </a>
+        <a class="contact-tile reveal" style="--d:.12s" href="https://whatsapp.com/channel/0029VbEUPJK8fewu2cbXBp01" target="_blank" rel="noopener">
+          <div class="ico-box"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></div>
+          <div><h3>Join channel</h3><p>Update terbaru dan info tool di satu tempat.</p></div>
+        </a>
+      </div>
     </div>
   </section>
 
 </main>
 
 <footer class="footer">
-  AM Generator &middot; Premium Activation &middot; by <b>Egaa</b><br>
-  &copy; 2026 AM Generator
+  <div class="footer-line"></div>
+  <p>AM Generator &middot; Premium Activation &middot; by <b>Egaa</b></p>
+  <p class="footer-sub">&copy; 2026 AM Generator</p>
 </footer>
 
 <nav class="bottom-nav">
@@ -229,9 +382,17 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
 </div>
 
 <div class="loader" id="loader">
-  <div class="loader-ring"><img id="loaderAvatar" src="img/avatar-mono.png" alt=""></div>
+  <div class="ld-scan"></div>
+  <div class="ld-glow"></div>
+  <div class="ld-core">
+    <div class="ld-ring"></div>
+    <div class="ld-orbit"><span></span></div>
+    <div class="ld-avatar"><img id="loaderAvatar" src="img/avatar-mono.png" alt=""></div>
+  </div>
+  <div class="ld-brand">AM GENERATOR</div>
   <div class="loader-text"><span id="loaderTyping">Initializing...</span></div>
   <div class="loader-progress"><div class="loader-bar" id="loaderBar"></div></div>
+  <div class="ld-foot">by Egaa</div>
 </div>
 
 <script src="js/script.js"></script>
