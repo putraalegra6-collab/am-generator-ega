@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="mono">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,11 +8,13 @@
 <title>AM Generator | Premium Activation</title>
 <link rel="stylesheet" href="css/style.css">
 <script>
+try{ var __t = localStorage.getItem('am-theme'); document.documentElement.setAttribute('data-theme', __t === 'glass' ? 'glass' : 'mono'); }catch(e){}
 try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttribute('data-return','1'); } else { sessionStorage.setItem('amVisited','1'); } }catch(e){}
 </script>
 </head>
 <body>
 <div class="grid-bg"></div>
+<div class="blobs"><i></i><i></i><i></i></div>
 <div class="glow glow-a"></div>
 <div class="glow glow-b"></div>
 <div class="noise"></div>
@@ -26,7 +28,7 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
       <span class="brand-name">Egaa</span>
     </a>
     <div class="nav-right">
-      <div class="status-pill"><span class="dot"></span><span>Online</span></div>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Ganti tema"><i></i><span>Mono</span></button>
     </div>
   </div>
 </header>
@@ -90,7 +92,6 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
   <section class="page" id="page-cara">
     <div class="sec">
       <div class="sec-head reveal"><p class="kicker">Cara Kerja</p><h2>Ikuti 3 Langkah Mudah</h2><p>Aktivasi premium hanya butuh tiga langkah sederhana. Ikuti urutannya dari atas ke bawah.</p></div>
-
       <div class="steps">
         <div class="step reveal" style="--d:.05s">
           <div class="step-no">1</div>
@@ -197,7 +198,7 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
         </div>
 
         <div class="term" id="term">
-          <div class="term-bar"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span><span class="tt">RESPONSE LOG</span></div>
+          <div class="term-bar"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span><span class="tt">HASIL</span></div>
           <div class="term-body" id="termBody"></div>
         </div>
       </div>
@@ -382,19 +383,22 @@ try{ if(sessionStorage.getItem('amVisited')){ document.documentElement.setAttrib
 </div>
 
 <div class="loader" id="loader">
-  <div class="ld-scan"></div>
-  <div class="ld-glow"></div>
+  <div class="ld-bgfx"><i></i><i></i></div>
   <div class="ld-core">
-    <div class="ld-ring"></div>
-    <div class="ld-orbit"><span></span></div>
+    <div class="ld-rings"><i></i><i></i><i></i></div>
+    <div class="ld-orbit"><span></span><span></span></div>
     <div class="ld-avatar"><img id="loaderAvatar" src="img/avatar-mono.png" alt=""></div>
   </div>
-  <div class="ld-brand">AM GENERATOR</div>
+  <div class="ld-brand" aria-label="AM Generator">
+    <span style="--i:0">A</span><span style="--i:1">M</span><span style="--i:2"> </span><span style="--i:3">G</span><span style="--i:4">E</span><span style="--i:5">N</span><span style="--i:6">E</span><span style="--i:7">R</span><span style="--i:8">A</span><span style="--i:9">T</span><span style="--i:10">O</span><span style="--i:11">R</span>
+  </div>
+  <div class="ld-sub">Premium Activation</div>
   <div class="loader-text"><span id="loaderTyping">Initializing...</span></div>
   <div class="loader-progress"><div class="loader-bar" id="loaderBar"></div></div>
   <div class="ld-foot">by Egaa</div>
 </div>
 
 <script src="js/script.js"></script>
+<script src="js/ui.js"></script>
 </body>
 </html>
